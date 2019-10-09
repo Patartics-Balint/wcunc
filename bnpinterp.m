@@ -100,12 +100,26 @@ function [F, info] = bnpinterp(varargin)
 
 	% construct Theta
 	A0 = diag(z);
-	Theta = ss(A0, H \ [-C0plus', C0minus'], [C0plus; C0minus], eye(2 * n));
-	Theta = tf(Theta);
-	Theta = tf(cellfun(@(b)(real(b)), Theta.num, 'UniformOutput', false),...
-		cellfun(@(a)(real(a)), Theta.den, 'UniformOutput', false));
-	Theta = minreal(ss(Theta), [], false);
-	Theta = balreal(Theta);
+	B0 = H \ [-C0plus', C0minus'];
+	C0 = [C0plus; C0minus];
+	D0 = eye(2 * n);
+	nfreq = numel(freq);
+	if even(numel(z)) % no zero frequency
+		It = eye(nfreq);
+		T0 = [It, It; 1i * It, - 1i * It] / 2;	
+		T0inv = [It, - 1i * It; It, 1i * It];		
+	else % zero frequnecy
+		It = eye(nfreq - 1) / 2;
+		zc = zeros(nfreq - 1, 1);
+		T0 = [It, zc, It;...
+					zc', 1, zc';
+					1i * It, zc, -1i * It];
+		T0inv = inv(T0);
+	end
+	Ar = real(T0 * A0 * T0inv);
+	Br = real(T0 * B0);
+	Cr = real(C0 * T0inv);
+	Theta = ss(Ar, Br, Cr, D0);
 	info.Theta = Theta;
 
 	Theta11 = Theta(1 : n, 1 : n);
@@ -114,11 +128,22 @@ function [F, info] = bnpinterp(varargin)
 	Theta22 = Theta(n + 1 : end, n + 1 : end);
 	
 	% construct interpolant
-	F = minreal(Theta11 * G + Theta12, [], false) / (minreal(Theta21 * G + Theta22, [], false));
-	F = minreal(F, [], false);
-	F = balreal(F);
+	Fnum = ss([Theta11.a, Theta11.b * G.c; zeros(order(G), order(Theta11)), G.a],...
+		[Theta12.b + Theta11.b * G.d; G.b], [Theta11.c, G.c], G.d);
+	Fden = ss([Theta21.a, Theta21.b * G.c; zeros(order(G), order(Theta22)), G.a],...
+		[Theta22.b + Theta21.b * G.d; G.b], [Theta21.c, zeros(size(Theta21, 1), order(G))], eye(size(Theta21, 1)));
+% 	Fdeninv = ss([Theta21.a - Theta21.b * G.d * Theta21.c - Theta22.b * Theta21.c, Theta21.b * G.c;...
+% 								-G.b * Theta21.c, G.a],...
+% 								[Theta21.b * G.d + Theta22.b; G.b],...
+% 								[-Theta21.c, zeros(size(Theta21, 1), order(G))], Theta22.d);
+	[A, B, C1, D] = ssdata(Fnum);
+	[~, ~, C2, ~] = ssdata(Fden);
+	F = ss(A - B * C2, B, C1 - D * C2, D);
 
 	% check result
+	if max(real(eig(F))) > 0
+		error('Something went wrong. The interpolant is unstable.');
+	end
 	inds = find(imag(z) >= 0);
 	zchk = imag(z(inds));
 	F0 = freqresp(F, zchk);
