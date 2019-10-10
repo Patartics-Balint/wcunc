@@ -78,12 +78,11 @@ function [F, info] = bnpinterp(varargin)
 	end % at this point the main diagonoal of H is zero
 	rho = sdpvar(1, numel(z), 'full');
 	rho_peak = sdpvar(1);
+	epsilon = 1e-6;
 	opt = sdpsettings('solver', 'lmilab', 'verbose', 0);
-	max_cond = 1e4; % The condition number of H is upper bounded in the optimisation.
-	% This is a potentially temporary measure to ensure managable numerical properties. 
 	diagn = optimize([rho_peak >= rho,...
 		rho >= 0,...
-		1 / max_cond * eye(size(H)) <= H + diag(rho) <= max_cond * eye(size(H))],...
+		epsilon <= H + diag(rho)],...
 		rho_peak + sum(rho), opt);
 	rho = value(rho);
 	H = H + diag(rho);
