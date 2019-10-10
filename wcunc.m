@@ -55,7 +55,7 @@ function [wcu, gain, info] = wcunc(usys, freq)
 	for kk = 1 : size(resp, 3)
 		lb2(kk, 1) = norm(resp(:, :, kk), 2);
 	end
-	if max(abs(lb2 - lb1)) > 1e-4
+	if max(abs(lb2 - lb1)) > 1e-3
 		error('Something went wrong. The gain of the system does not match the desired lower bound at the specified frequnecies.');
 	end
 end
