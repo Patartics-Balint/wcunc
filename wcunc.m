@@ -26,12 +26,15 @@ function [wcu, gain, info] = wcunc(usys, freq)
 		freq = unique(freq);
 		warning('Repeated frequencies removed.');
 	end
+	unames = fieldnames(usys.Uncertainty);
+	if isempty(unames)
+		error('The system has no uncertainty blocks.');
+	end
 	freq = reshape(freq, [1, numel(freq)]);
 	freq = sort(freq, 'ascend');
 	info.frequency = freq;
 	
 	% calculate worst-case uncertainty block by block.
-	unames = fieldnames(usys.Uncertainty);
 	[~, ~, wcginfo] = wcgain(usys, freq);
 	for kblk = 1 : numel(unames)
 		blkname = unames{kblk};
@@ -52,7 +55,7 @@ function [wcu, gain, info] = wcunc(usys, freq)
 	for kk = 1 : size(resp, 3)
 		lb2(kk, 1) = norm(resp(:, :, kk), 2);
 	end
-	if max(abs(lb2 - lb1)) > 1e-4
+	if max(abs(lb2 - lb1)) > 1e-3
 		error('Something went wrong. The gain of the system does not match the desired lower bound at the specified frequnecies.');
 	end
 end

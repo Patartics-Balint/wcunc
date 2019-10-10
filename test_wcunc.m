@@ -3,7 +3,7 @@ fprintf('Tests running...\n');
 warning off;
 for kk = 1 : n_examples
 	fprintf('%d\t', kk);
-	load(sprintf('example%d', kk));
+	load(sprintf('./examples/example%d', kk));
 	try 
 		[wcu, wcg, info] = wcunc(usys, freq);
 		fprintf('pass\n');
