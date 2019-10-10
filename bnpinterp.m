@@ -81,12 +81,15 @@ function [F, info] = bnpinterp(varargin)
 	opt = sdpsettings('solver', 'lmilab', 'verbose', 0);
 	max_cond = 1e4; % The condition number of H is upper bounded in the optimisation.
 	% This is a potentially temporary measure to ensure managable numerical properties. 
-	optimize([rho_peak >= rho,...
+	diagn = optimize([rho_peak >= rho,...
 		rho >= 0,...
 		1 / max_cond * eye(size(H)) <= H + diag(rho) <= max_cond * eye(size(H))],...
 		rho_peak + sum(rho), opt);
 	rho = value(rho);
 	H = H + diag(rho);
+	if strfind(diagn.info, 'Infeasible')
+		error('Something went wrong. Optimisation infeasible.');
+	end
 	if any(eig(H) <= 0)
 		error('Something went wrong when computing the Pick matrix.');
 	end
@@ -109,12 +112,14 @@ function [F, info] = bnpinterp(varargin)
 		T0 = [It, It; 1i * It, - 1i * It] / 2;	
 		T0inv = [It, - 1i * It; It, 1i * It];		
 	else % zero frequnecy
-		It = eye(nfreq - 1) / 2;
+		It = eye(nfreq - 1);
 		zc = zeros(nfreq - 1, 1);
-		T0 = [It, zc, It;...
+		T0 = [It/2, zc, It/2;...
 					zc', 1, zc';
-					1i * It, zc, -1i * It];
-		T0inv = inv(T0);
+					1i * It/2, zc, -1i * It/2];
+		T0inv = [It, zc, -1i * It;...
+						 zc', 1, zc';
+						 It, zc, 1i * It];
 	end
 	Ar = real(T0 * A0 * T0inv);
 	Br = real(T0 * B0);
@@ -132,10 +137,6 @@ function [F, info] = bnpinterp(varargin)
 		[Theta12.b + Theta11.b * G.d; G.b], [Theta11.c, G.c], G.d);
 	Fden = ss([Theta21.a, Theta21.b * G.c; zeros(order(G), order(Theta22)), G.a],...
 		[Theta22.b + Theta21.b * G.d; G.b], [Theta21.c, zeros(size(Theta21, 1), order(G))], eye(size(Theta21, 1)));
-% 	Fdeninv = ss([Theta21.a - Theta21.b * G.d * Theta21.c - Theta22.b * Theta21.c, Theta21.b * G.c;...
-% 								-G.b * Theta21.c, G.a],...
-% 								[Theta21.b * G.d + Theta22.b; G.b],...
-% 								[-Theta21.c, zeros(size(Theta21, 1), order(G))], Theta22.d);
 	[A, B, C1, D] = ssdata(Fnum);
 	[~, ~, C2, ~] = ssdata(Fden);
 	F = ss(A - B * C2, B, C1 - D * C2, D);
@@ -199,7 +200,7 @@ function [data, freq, G, n, data_is_scalar, info] = parse_input(input)
 		if ~isstable(G)
 			error('G must be stable.');
 		end
-		if hinfnorm(G) > 1
+		if hinfnorm(G) > 1 + 1e-2
 			error('The H-inf norm of G must be at most one.');
 		end
 	end
