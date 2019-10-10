@@ -26,12 +26,15 @@ function [wcu, gain, info] = wcunc(usys, freq)
 		freq = unique(freq);
 		warning('Repeated frequencies removed.');
 	end
+	unames = fieldnames(usys.Uncertainty);
+	if isempty(unames)
+		error('The system has no uncertainty blocks.');
+	end
 	freq = reshape(freq, [1, numel(freq)]);
 	freq = sort(freq, 'ascend');
 	info.frequency = freq;
 	
 	% calculate worst-case uncertainty block by block.
-	unames = fieldnames(usys.Uncertainty);
 	[~, ~, wcginfo] = wcgain(usys, freq);
 	for kblk = 1 : numel(unames)
 		blkname = unames{kblk};
