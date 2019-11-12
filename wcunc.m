@@ -11,7 +11,7 @@ function [wcu, gain, info] = wcunc(usys, freq)
 	%   at the frequencies in freq.
 	%   gain: hinfnorm(usubs(usys, wcu))
 	%   info: Structure containing information about the interpolation for
-	%   each uncertainty block.
+	%   each uncertainty block of the dynamic uncertainty.
 	%
 	% See also wcgain, bnpinterp
 	
@@ -19,18 +19,24 @@ function [wcu, gain, info] = wcunc(usys, freq)
 	
 	if ~isempty(rnames) % there is real uncertainty in the system
 		obj = @(dels)eval_obj(usys, freq, rnames, dels);
-		delropt = fmincon(obj, zeros(nr, 1), [], [], [], [], -ones(nr, 1), ones(nr, 1));
+		fminopt = optimset('Display', 'off');
+		delropt = fmincon(obj, zeros(nr, 1), [], [], [], [],...
+			-ones(nr, 1), ones(nr, 1), [], fminopt);
 		for kk = 1 : numel(rnames)
-			wcur.(rnames{kk}) = delropt(kk);
+			wcu.(rnames{kk}) = delropt(kk);
 		end
-		usys_dyn = usubs(usys, wcur);
-		wcu = wcunc(usys_syn, freq);
-		for kk = 1 : numel(rnames)
-			wcu.(rnames{kk}) = wcur.(rnames{kk});
+		if ~isempty(dnames)
+			usys_dyn = usubs(usys, wcu);
+			[wcud, ~, info] = wcunc(usys_dyn, freq);
+			for kk = 1 : numel(dnames)
+				wcu.(dnames{kk}) = wcud.(dnames{kk});
+			end
 		end
+		gain = hinfnorm(usubs(usys, wcu));
+		return;
 	end
 	
-	% calculate worst-case uncertainty block by block.
+	% calculate worst-case dynamic uncertainty block by block.
 	[~, ~, wcginfo] = wcgain(usys, freq);
 	for kblk = 1 : numel(dnames)
 		blkname = dnames{kblk};
@@ -44,7 +50,13 @@ function [wcu, gain, info] = wcunc(usys, freq)
 	end		
 	gain = hinfnorm(usubs(usys, wcu));
 	
-	% check result
+	check_result(usys, wcu, freq);
+end
+
+function check_result(usys, wcu, freq)
+	% Check the accuracy of the worst-case dynamic uncertainty
+	% construction.
+	[~, ~, wcginfo] = wcgain(usys, freq);
 	wcsys = usubs(usys, wcu);
 	lb1 = wcginfo.Bounds(:, 1);
 	resp = freqresp(wcsys, freq);
