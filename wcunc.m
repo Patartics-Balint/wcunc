@@ -66,29 +66,28 @@ function [wcu, gain, info] = wcunc(usys, freq)
 					delsamp = stabsamp;
 				end
 			end
-			[wcublk, infoblk] = bnpinterp(delsamp, [freq, cfreq], 0);
+			[wcublk, infoblk] = bnpinterp(delsamp, [freq, cfreq]);
 			info.(blkname) = infoblk;
-			wcu.(blkname) = wcublk;
-			check_result(susys_dyn, wcu, freq);
+			wcu.(blkname) = wcublk;			
 		end
-		
-		% scale uncertainty block
-		if ~isempty(cfreq)
-			for name = [rnames; dnames]'
-				name = name{1};
-				wcu.(name) = info.uscale * wcu.(name);
-			end
-		end
-		% save uncertainty block as a dynamic system
-		ublk = [];
+		check_result(susys_dyn, wcu, freq);
+	end
+	% scale uncertainty block
+	if ~isempty(cfreq)
 		for name = [rnames; dnames]'
 			name = name{1};
-			ublk = blkdiag(ublk, wcu.(name));
+			wcu.(name) = info.uscale * wcu.(name);
 		end
-		info.ublk = ublk;
-		% compute the gain
-		gain = hinfnorm(usubs(usys, wcu));
 	end
+	% save uncertainty block as a dynamic system
+	ublk = [];
+	for name = [rnames; dnames]'
+		name = name{1};
+		ublk = blkdiag(ublk, wcu.(name));
+	end
+	info.ublk = ublk;
+	% compute the gain
+	gain = hinfnorm(usubs(usys, wcu));
 end
 
 function check_result(usys, wcu, freq)
@@ -173,20 +172,23 @@ function [usys, freq, dnames, rnames, nr, info] = parse_input(usys, freq)
 end
 
 function [susys, freq, cfreq, info] = scale_for_robust_stability(usys, freq, info)
-	cfreq = [];
 	% check robust stability
 	sm = robstab(usys);
 	if sm.LowerBound <= 1 % the system is not robustly stable => scale the unceratinty block
 		[M, delta] = lftdata(usys);
 		info.uscale = 1.01 * sm.LowerBound;
 		susys = lft(delta * info.uscale, M);
-		info.susys = susys;
 		cfreq = sm.CriticalFrequency;
 		% remove the frequency points where mu >= 1 from the set of frequencies
 		[~, ~, rinfo] = robstab(susys, freq);
 		freq(rinfo.Bounds(:, 1) <= 1) = [];
-		% save frequencies
-		info.cfreq = cfreq;
-		info.freq = freq;
+	else
+		info.uscale = 1;
+		cfreq = [];
+		susys = usys;
 	end
+	% save frequencies
+	info.susys = susys;
+	info.cfreq = cfreq;
+	info.freq = freq;
 end
