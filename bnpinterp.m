@@ -175,6 +175,7 @@ function [data, freq, G, n, data_is_scalar, info] = parse_input(input)
 	if any(freq < 0)
 		error('The frequencies must be non-negative.');
 	end
+	freq = sort(freq);
 	if numel(freq) ~= numel(unique(freq))
 		error('Repeated frequencies are not allowed.');
 	end
