@@ -158,11 +158,15 @@ function [data, freq, G, n, data_is_scalar, info] = parse_input(input)
 	if any(freq < 0)
 		error('The frequencies must be non-negative.');
 	end
-	freq = sort(freq);
 	if numel(freq) ~= numel(unique(freq))
 		error('Repeated frequencies are not allowed.');
 	end
-	if size(data, 3) ~= numel(freq) && numel(data) ~= numel(freq)
+	[freq, sortind] = sort(freq);
+	if size(data, 3) == numel(freq)
+		data = data(:, :, sortind);
+	elseif numel(data) == numel(freq)
+		data = data(sortind);
+	else
 		error('The number of data samples and frequencies must be the same.');
 	end
 	data_is_scalar = (size(data, 3) == 1 &&...
