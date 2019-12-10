@@ -214,8 +214,11 @@ function [Ar, Br, Cr] = transform_ss_matrices_to_real(A0, B0, C0, z)
 	Br = T0 * B0;
 	Cr = C0 * T0inv;
 	maximag = @(M)(max(abs(imag(M(:)))));
+	maxreal = @(M)(max(abs(real(M(:)))));
 	tol = 1e-6;
-	if maximag(Ar) > tol || maximag(Br) > tol || maximag(Cr) > tol
+	if maximag(Ar) > tol * maxreal(Ar) ||...
+		 maximag(Br) > tol * maxreal(Br) ||...
+		 maximag(Cr) > tol * maxreal(Cr)
 		error('The state-space matrices of Theta could not be transformed to real matrices.');
 	end
 	Ar = real(Ar);

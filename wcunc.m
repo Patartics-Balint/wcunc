@@ -176,7 +176,7 @@ function [susys, freq, cfreq, info] = scale_for_robust_stability(usys, freq, inf
 	sm = robstab(usys);
 	if sm.LowerBound <= 1 % the system is not robustly stable => scale the unceratinty block
 		[M, delta] = lftdata(usys);
-		info.uscale = 1.01 * sm.LowerBound;
+		info.uscale = 1.01 * sm.UpperBound;
 		susys = lft(delta * info.uscale, M);
 		cfreq = sm.CriticalFrequency;
 		% remove the frequency points where mu >= 1 from the set of frequencies
