@@ -1,3 +1,5 @@
+clear;
+clc;
 n_examples = size(dir('examples/')) - 2;
 fprintf('Tests running...\n');
 warning off;
