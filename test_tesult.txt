@@ -1,4 +1,3 @@
-Tests running...
 1	pass
 2	pass
 3	pass
@@ -6,10 +5,10 @@ Tests running...
 5	pass
 6	pass
 7	pass
-8	fail	The first input argument must be 'uss'
-9	fail	The first input argument must be 'uss'
-10	fail	The first input argument must be 'uss'
-11	fail	The first input argument must be 'uss'
+8	pass
+9	pass
+10	pass
+11	pass
 12	pass
 13	pass
 14	pass
@@ -17,8 +16,8 @@ Tests running...
 16	pass
 17	fail	Something went wrong. The H-inf norm of the interpolant is greater than 1.
 18	pass
-19	pass
-20	fail	The system has no uncertainty blocks.
+19	fail	The "Frequency" property of FRD models must be set to a vector of real and finite frequencies.
+20	fail	When specifying a frequency vector W, the nominal value of USYS must be stable.
 21	pass
 22	pass
 23	fail	When specifying a frequency vector W, the nominal value of USYS must be stable.
@@ -33,3 +32,9 @@ Tests running...
 32	pass
 33	pass
 34	pass
+35	pass
+36	pass
+37	pass
+38	pass
+39	pass
+40	pass
