@@ -1,40 +1,80 @@
-1	pass
-2	pass
-3	pass
-4	pass
-5	pass
-6	pass
-7	pass
-8	pass
-9	pass
-10	pass
-11	pass
-12	pass
-13	pass
-14	pass
-15	pass
-16	pass
-17	fail	Something went wrong. The H-inf norm of the interpolant is greater than 1.
-18	pass
-19	fail	The "Frequency" property of FRD models must be set to a vector of real and finite frequencies.
-20	fail	When specifying a frequency vector W, the nominal value of USYS must be stable.
-21	pass
-22	pass
-23	fail	When specifying a frequency vector W, the nominal value of USYS must be stable.
-24	pass
-25	pass
-26	pass
-27	pass
-28	pass
-29	pass
-30	pass
-31	pass
-32	pass
-33	pass
-34	pass
-35	pass
-36	pass
-37	pass
-38	pass
-39	pass
-40	pass
+1	given freqs.	pass
+	selected freqs.	fail	Something went wrong. The interpolant is unstable.
+2	given freqs.	pass
+	selected freqs.	pass
+3	given freqs.	pass
+	selected freqs.	pass
+4	given freqs.	pass
+	selected freqs.	pass
+5	given freqs.	pass
+	selected freqs.	pass
+6	given freqs.	pass
+	selected freqs.	pass
+7	given freqs.	pass
+	selected freqs.	pass
+8	given freqs.	pass
+	selected freqs.	fail	The "Frequency" property of FRD models must be set to a vector of real and finite frequencies.
+9	given freqs.	pass
+	selected freqs.	pass
+10	given freqs.	pass
+	selected freqs.	pass
+11	given freqs.	pass
+	selected freqs.	pass
+12	given freqs.	pass
+	selected freqs.	fail	The "Frequency" property of FRD models must be set to a vector of real and finite frequencies.
+13	given freqs.	pass
+	selected freqs.	pass
+14	given freqs.	pass
+	selected freqs.	pass
+15	given freqs.	pass
+	selected freqs.	pass
+16	given freqs.	pass
+	selected freqs.	pass
+17	given freqs.	fail	Something went wrong. The H-inf norm of the interpolant is greater than 1.
+	selected freqs.	pass
+18	given freqs.	pass
+	selected freqs.	pass
+19	given freqs.	fail	The "Frequency" property of FRD models must be set to a vector of real and finite frequencies.
+	selected freqs.	fail	Expected Y to be nonempty.
+20	given freqs.	fail	When specifying a frequency vector W, the nominal value of USYS must be stable.
+	selected freqs.	fail	When specifying a frequency vector W, the nominal value of USYS must be stable.
+21	given freqs.	pass
+	selected freqs.	pass
+22	given freqs.	pass
+	selected freqs.	pass
+23	given freqs.	fail	When specifying a frequency vector W, the nominal value of USYS must be stable.
+	selected freqs.	fail	When specifying a frequency vector W, the nominal value of USYS must be stable.
+24	given freqs.	pass
+	selected freqs.	pass
+25	given freqs.	pass
+	selected freqs.	pass
+26	given freqs.	pass
+	selected freqs.	fail	The "Frequency" property of FRD models must be set to a vector of real and finite frequencies.
+27	given freqs.	pass
+	selected freqs.	fail	Something went wrong. The interpolant is unstable.
+28	given freqs.	pass
+	selected freqs.	pass
+29	given freqs.	pass
+	selected freqs.	pass
+30	given freqs.	pass
+	selected freqs.	pass
+31	given freqs.	pass
+	selected freqs.	pass
+32	given freqs.	pass
+	selected freqs.	pass
+33	given freqs.	pass
+	selected freqs.	pass
+34	given freqs.	pass
+	selected freqs.	pass
+35	given freqs.	pass
+	selected freqs.	pass
+36	given freqs.	pass
+	selected freqs.	pass
+37	given freqs.	pass
+	selected freqs.	pass
+38	given freqs.	pass
+	selected freqs.	pass
+39	given freqs.	pass
+	selected freqs.	fail	Index exceeds matrix dimensions.
+40	given freqs.	pass
+	selected freqs.	pass

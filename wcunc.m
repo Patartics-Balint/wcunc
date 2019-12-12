@@ -15,9 +15,15 @@ function [wcu, gain, info] = wcunc(usys, freq)
 	%
 	% See also wcgain, bnpinterp
 	
-	[usys, freq, dnames, rnames, nr, info] = parse_input(usys, freq);
-	[susys, freq, cfreq, info] = scale_for_robust_stability(usys, freq, info);
-	
+% 	[usys, freq, dnames, rnames, nr, info] = parse_input(usys, freq);
+% 	[susys, freq, cfreq, info] = scale_for_robust_stability(usys, freq, info);
+	[dnames, rnames, nr] = process_system(usys);
+	[susys, cfreq, info] = scale_for_robust_stability(usys);
+	if nargin < 2
+		freq = pick_freq_grid(susys, info);
+	end
+	[freq, info] = process_freq(freq, susys, info);	
+
 	if ~isempty(rnames) % there is parametric uncertainty in the system
 		if isempty(cfreq)
 			con = @(dels)(default_con(dels)); % default constraints (always satisfied)
@@ -90,6 +96,48 @@ function [wcu, gain, info] = wcunc(usys, freq)
 	gain = hinfnorm(usubs(usys, wcu));
 end
 
+function freq = pick_freq_grid(susys, info)	
+	freqs = [0, logspace(-6, 6, 150)]';
+	if info.uscale == 1
+		wcg = wcgain(susys);
+		freqs = unique([wcg.CriticalFrequency; freqs]);
+	else
+		[~, ~, robinfo] = robstab(susys, freqs);
+		freqs(robinfo.Bounds(:, 1) <= 1) = [];	
+	end
+	[~, ~, wcginfo] = wcgain(susys, freqs);
+	wcglb = wcginfo.Bounds(:, 1);
+	if info.uscale == 1
+		[~, maxind] = max(wcglb);
+		freq = freqs(maxind);
+	else
+		freq = [];
+	end
+	range = max(wcglb) - min(wcglb);
+	if info.uscale < 1
+		range = min([range, 100]);
+	end
+	[pks, pfreq] = findpeaks(wcglb, freqs, 'Threshold', 0.01 * range);
+	if isempty(pfreq)
+		[pks, pfreq] = findpeaks(wcglb, freqs, 'NPeaks', 1);
+	end
+	if isempty(pfreq)
+		keyboard;
+	end
+	if ~ismember(0, pfreq) && ismember(0, freqs)
+		% add zero
+		pks = [wcglb(1); pks];
+		pfreq = [freqs(1); pfreq];
+	end
+	if numel(pks) < 4
+		freq = [freq; pfreq];
+	else
+		[~, sortinds] = sort(pks, 'descend');
+		freq = [freq; pfreq(sortinds(1 : 4))];
+	end
+	freq = unique(freq);
+end
+
 function check_result(usys, wcu, freq)
 	% Check the accuracy of the worst-case dynamic uncertainty
 	% construction.
@@ -134,22 +182,11 @@ function [c, ceq] = robstab_con(usys, cfreq, rnames, dels)
 	c = target_mu - 1 / sm.LowerBound; % mu(cfreq) >= target_mu
 end
 
-function [usys, freq, dnames, rnames, nr, info] = parse_input(usys, freq)
+function [dnames, rnames, nr] = process_system(usys)
 	% check usys
 	if ~isa(usys, 'uss')
 		error('The first input argument must be ''uss''');
 	end
-	% check frequencies
-	if ~isnumeric(freq)
-		error('The array of frequencies must be a numeric array.');
-	end
-	if numel(freq) ~= numel(unique(freq))
-		freq = unique(freq);
-		warning('Repeated frequencies removed.');
-	end
-	freq = reshape(freq, [1, numel(freq)]);
-	freq = sort(freq, 'ascend');
-	info.freq = freq;
 	% find uncertainty names
 	unames = fieldnames(usys.Uncertainty);
 	if isempty(unames)
@@ -171,7 +208,7 @@ function [usys, freq, dnames, rnames, nr, info] = parse_input(usys, freq)
 	end
 end
 
-function [susys, freq, cfreq, info] = scale_for_robust_stability(usys, freq, info)
+function [susys, cfreq, info] = scale_for_robust_stability(usys, info)
 	% check robust stability
 	sm = robstab(usys);
 	if sm.LowerBound <= 1 % the system is not robustly stable => scale the unceratinty block
@@ -179,9 +216,6 @@ function [susys, freq, cfreq, info] = scale_for_robust_stability(usys, freq, inf
 		info.uscale = 1.01 * sm.UpperBound;
 		susys = lft(delta * info.uscale, M);
 		cfreq = sm.CriticalFrequency;
-		% remove the frequency points where mu >= 1 from the set of frequencies
-		[~, ~, rinfo] = robstab(susys, freq);
-		freq(rinfo.Bounds(:, 1) <= 1) = [];
 	else
 		info.uscale = 1;
 		cfreq = [];
@@ -190,5 +224,21 @@ function [susys, freq, cfreq, info] = scale_for_robust_stability(usys, freq, inf
 	% save frequencies
 	info.susys = susys;
 	info.cfreq = cfreq;
+end
+
+function [freq, info] = process_freq(freq, susys, info)
+	% check frequencies
+	if ~isnumeric(freq)
+		error('The array of frequencies must be a numeric array.');
+	end
+	if numel(freq) ~= numel(unique(freq))
+		freq = unique(freq);
+		warning('Repeated frequencies removed.');
+	end
+	freq = reshape(freq, [1, numel(freq)]);
+	freq = sort(freq, 'ascend');
+	% remove the frequency points where mu >= 1 from the set of frequencies
+	[~, ~, rinfo] = robstab(susys, freq);
+	freq(rinfo.Bounds(:, 1) <= 1) = [];
 	info.freq = freq;
 end
