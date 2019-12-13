@@ -40,7 +40,7 @@ function [wcu, gain, info] = wcunc(usys, freq)
 		[delropt, ~, exitflag] = fmincon(obj, delr_init, [], [], [], [],...
 			-ones(nr, 1), ones(nr, 1), con, fminopt);
 		if exitflag == -2
-			error('Something went wrong. The worst-case value of the parametric uncertainty could not be found.');
+			error('The worst-case value of the parametric uncertainty could not be found.');
 		end
 		for kk = 1 : numel(rnames)
 			wcu.(rnames{kk}) = delropt(kk);
@@ -149,7 +149,7 @@ function check_result(usys, wcu, freq)
 		lb2(kk, 1) = norm(resp(:, :, kk), 2);
 	end
 	if max(abs(lb2 - lb1)) > 1e-3
-		error('Something went wrong. The gain of the system does not match the desired lower bound at the specified frequnecies.');
+		error('The gain of the system does not match the desired lower bound at the specified frequnecies.');
 	end
 end
 
