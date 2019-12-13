@@ -15,8 +15,6 @@ function [wcu, gain, info] = wcunc(usys, freq)
 	%
 	% See also wcgain, bnpinterp
 	
-% 	[usys, freq, dnames, rnames, nr, info] = parse_input(usys, freq);
-% 	[susys, freq, cfreq, info] = scale_for_robust_stability(usys, freq, info);
 	[dnames, rnames, nr] = process_system(usys);
 	[susys, cfreq, info] = scale_for_robust_stability(usys);
 	if nargin < 2
@@ -25,17 +23,7 @@ function [wcu, gain, info] = wcunc(usys, freq)
 	[freq, info] = process_freq(freq, susys, info);	
 
 	if ~isempty(rnames) % there is parametric uncertainty in the system
-		if isempty(cfreq)
-			con = @(dels)(default_con(dels)); % default constraints (always satisfied)
-			delr_init = zeros(nr, 1);
-		else
-			con = @(dels)(robstab_con(susys, cfreq, rnames, dels));
-			[~, destab_unc] = robstab(susys, cfreq);
-			for kk = 1 : numel(rnames)
-				delr_init(kk) = destab_unc.(rnames{kk});
-			end
-		end
-		obj = @(dels)(eval_obj(susys, freq, rnames, dels));
+		[obj, con, delr_init] = pick_obj_con_and_init_val(susys, freq, cfreq, rnames, dnames);
 		fminopt = optimset('Display', 'off');
 		[delropt, ~, exitflag] = fmincon(obj, delr_init, [], [], [], [],...
 			-ones(nr, 1), ones(nr, 1), con, fminopt);
@@ -95,7 +83,7 @@ function [wcu, gain, info] = wcunc(usys, freq)
 	% compute the gain
 	gain = hinfnorm(usubs(usys, wcu));
 end
-
+	
 function freq = pick_freq_grid(susys, info)	
 	freqs = [0, logspace(-6, 6, 150)]';
 	if info.uscale == 1
@@ -153,26 +141,65 @@ function check_result(usys, wcu, freq)
 	end
 end
 
-function obj = eval_obj(usys, freq, rnames, dels)
+function [obj, con, delr_init] = pick_obj_con_and_init_val(susys, freq, cfreq, rnames, dnames)
+	if isempty(dnames) % no dynamic uncertainty
+		obj = @(dels)(eval_obj_par(susys, freq, rnames, dels));
+	else % mixed uncertainty
+		obj = @(dels)(eval_obj_mixed(susys, freq, rnames, dels));
+	end
+	if isempty(cfreq)
+		con = @(dels)(eval_con_stab(dels)); % no constraints (always satisfied)
+		delr_init = zeros(numel(rnames), 1);
+	else
+		if isempty(dnames) % no dynamic uncertainty
+			con = @(dels)(eval_con_unstab_par(susys, cfreq, rnames, dels));
+			[~, destab_unc] = robstab(susys); % gives the wrong result when called with the critical
+			% frequency specified (probably due to a bug)
+		else % mixed uncertainty
+			con = @(dels)(eval_con_unstab_mixed(susys, cfreq, rnames, dels));
+			[~, destab_unc] = robstab(susys, cfreq);
+		end			
+		for kk = 1 : numel(rnames)
+			delr_init(kk) = destab_unc.(rnames{kk});
+		end
+	end
+end
+
+function obj = eval_obj_mixed(susys, freq, rnames, dels)
 	% The objective function is the sum of the worst-case gain
 	% lower bounds against the dynamic uncertainty at the
 	% specified frequencies.
 	for kk = 1 : numel(rnames)
 		reals.(rnames{kk}) = dels(kk);
 	end
-	[~, ~, info] = wcgain(usubs(usys, reals), freq);
+	[~, ~, info] = wcgain(usubs(susys, reals), freq);
 	obj = -sum(info.Bounds(:, 1));
 	if ~isfinite(obj)
 		obj = -1e10;
 	end
 end
 
-function [c, ceq] = default_con(dels)
+function obj = eval_obj_par(susys, freq, rnames, dels)
+	% The objective function is the sum of the largest singular
+	% values at the specified frequencies.
+	for kk = 1 : numel(rnames)
+		reals.(rnames{kk}) = dels(kk);
+	end
+	sys = usubs(susys, reals);
+	gain = sigma(sys, freq);
+	gain = gain(1, :);
+	obj = -sum(gain);
+	if ~isfinite(obj)
+		obj = -1e10;
+	end
+end
+
+function [c, ceq] = eval_con_stab(dels)
 	c = 0;
 	ceq = 0;
 end
 
-function [c, ceq] = robstab_con(usys, cfreq, rnames, dels)
+function [c, ceq] = eval_con_unstab_mixed(usys, cfreq, rnames, dels)
 	ceq = 0; % no equality constraints
 	target_mu = 1;
 	for kk = 1 : numel(rnames)
@@ -180,6 +207,17 @@ function [c, ceq] = robstab_con(usys, cfreq, rnames, dels)
 	end
 	sm = robstab(usubs(usys, reals), cfreq);	
 	c = target_mu - 1 / sm.LowerBound; % mu(cfreq) >= target_mu
+end
+
+function [c, ceq] = eval_con_unstab_par(usys, cfreq, rnames, dels)
+	ceq = 0; % no equality constraints
+	target_mu = 1;
+	for kk = 1 : numel(rnames)
+		reals.(rnames{kk}) = dels(kk);
+	end
+	sys = usubs(usys, reals);
+	% the real part of at least one pole must be non-negative
+	c = -max(real(eig(sys))); % max(Re(p)) >= 0
 end
 
 function [dnames, rnames, nr] = process_system(usys)
