@@ -1,5 +1,5 @@
 1	given freqs.	pass
-	selected freqs.	fail	Something went wrong. The interpolant is unstable.
+	selected freqs.	fail	The interpolant is unstable.
 2	given freqs.	pass
 	selected freqs.	pass
 3	given freqs.	pass
@@ -30,7 +30,7 @@
 	selected freqs.	pass
 16	given freqs.	pass
 	selected freqs.	pass
-17	given freqs.	fail	Something went wrong. The H-inf norm of the interpolant is greater than 1.
+17	given freqs.	fail	The H-inf norm of the interpolant is greater than 1.
 	selected freqs.	pass
 18	given freqs.	pass
 	selected freqs.	pass
@@ -51,7 +51,7 @@
 26	given freqs.	pass
 	selected freqs.	fail	The "Frequency" property of FRD models must be set to a vector of real and finite frequencies.
 27	given freqs.	pass
-	selected freqs.	fail	Something went wrong. The interpolant is unstable.
+	selected freqs.	fail	The interpolant is unstable.
 28	given freqs.	pass
 	selected freqs.	pass
 29	given freqs.	pass
@@ -68,8 +68,8 @@
 	selected freqs.	pass
 35	given freqs.	pass
 	selected freqs.	pass
-36	given freqs.	pass
-	selected freqs.	pass
+36	given freqs.	fail	The worst-case value of the parametric uncertainty could not be found.
+	selected freqs.	fail	Index exceeds matrix dimensions.
 37	given freqs.	pass
 	selected freqs.	pass
 38	given freqs.	pass
