@@ -15,42 +15,127 @@ function [wcu, gain, info] = wcunc(usys, freq)
 	%
 	% See also wcgain, bnpinterp
 	
-	[usys, freq, dnames, rnames, nr, info] = parse_input(usys, freq);
-	
-	if ~isempty(rnames) % there is real uncertainty in the system
-		obj = @(dels)eval_obj(usys, freq, rnames, dels);
+% 	[usys, freq, dnames, rnames, nr, info] = parse_input(usys, freq);
+% 	[susys, freq, cfreq, info] = scale_for_robust_stability(usys, freq, info);
+	[dnames, rnames, nr] = process_system(usys);
+	[susys, cfreq, info] = scale_for_robust_stability(usys);
+	if nargin < 2
+		freq = pick_freq_grid(susys, info);
+	end
+	[freq, info] = process_freq(freq, susys, info);	
+
+	if ~isempty(rnames) % there is parametric uncertainty in the system
+		if isempty(cfreq)
+			con = @(dels)(default_con(dels)); % default constraints (always satisfied)
+			delr_init = zeros(nr, 1);
+		else
+			con = @(dels)(robstab_con(susys, cfreq, rnames, dels));
+			[~, destab_unc] = robstab(susys, cfreq);
+			for kk = 1 : numel(rnames)
+				delr_init(kk) = destab_unc.(rnames{kk});
+			end
+		end
+		obj = @(dels)(eval_obj(susys, freq, rnames, dels));
 		fminopt = optimset('Display', 'off');
-		delropt = fmincon(obj, zeros(nr, 1), [], [], [], [],...
-			-ones(nr, 1), ones(nr, 1), [], fminopt);
+		[delropt, ~, exitflag] = fmincon(obj, delr_init, [], [], [], [],...
+			-ones(nr, 1), ones(nr, 1), con, fminopt);
+		if exitflag == -2
+			error('Something went wrong. The worst-case value of the parametric uncertainty could not be found.');
+		end
 		for kk = 1 : numel(rnames)
 			wcu.(rnames{kk}) = delropt(kk);
 		end
-		if ~isempty(dnames)
-			usys_dyn = usubs(usys, wcu);
-			[wcud, ~, info] = wcunc(usys_dyn, freq);
-			for kk = 1 : numel(dnames)
-				wcu.(dnames{kk}) = wcud.(dnames{kk});
-			end
-		end
-		gain = hinfnorm(usubs(usys, wcu));
-		return;
 	end
 	
-	% calculate worst-case dynamic uncertainty block by block.
-	[~, ~, wcginfo] = wcgain(usys, freq);
-	for kblk = 1 : numel(dnames)
-		blkname = dnames{kblk};
-		delsamp = [];
-		for kfr = 1 : numel(freq)
-			delsamp(:, :, kfr) = freqresp(wcginfo.WorstPerturbation(kfr).(blkname), wcginfo.Frequency(kfr));
+	if ~isempty(dnames) % there is dynamic uncertainty in the system
+		if exist('wcu')
+			susys_dyn = usubs(susys, wcu);
+		else
+			susys_dyn = susys;
 		end
-		[wcublk, infoblk] = bnpinterp(delsamp, freq);
-		info.(blkname) = infoblk;
-		wcu.(blkname) = wcublk;
-	end		
+		if ~isempty(cfreq) % draw destabilising sample
+			[~, ~, robinfo] = robstab(susys_dyn, cfreq);
+		end
+	  % calculate worst-case dynamic uncertainty block by block.
+		[~, ~, wcginfo] = wcgain(susys_dyn, freq);
+		for kblk = 1 : numel(dnames)
+			blkname = dnames{kblk};
+			delsamp = [];
+			for kfr = 1 : numel(freq)
+				delsamp(:, :, kfr) = freqresp(wcginfo.WorstPerturbation(kfr).(blkname), wcginfo.Frequency(kfr));
+			end
+			if ~isempty(cfreq)
+				stabsamp = freqresp(robinfo.WorstPerturbation.(blkname), cfreq);
+				if ~isempty(freq)
+					delsamp(:, :, end + 1) = stabsamp;
+				else
+					delsamp = stabsamp;
+				end
+			end
+			[wcublk, infoblk] = bnpinterp(delsamp, [freq, cfreq]);
+			info.(blkname) = infoblk;
+			wcu.(blkname) = wcublk;			
+		end
+		check_result(susys_dyn, wcu, freq);
+	end
+	% scale uncertainty block
+	if ~isempty(cfreq)
+		for name = [rnames; dnames]'
+			name = name{1};
+			wcu.(name) = info.uscale * wcu.(name);
+		end
+	end
+	% save uncertainty block as a dynamic system
+	ublk = [];
+	for name = [rnames; dnames]'
+		name = name{1};
+		ublk = blkdiag(ublk, wcu.(name));
+	end
+	info.ublk = ublk;
+	% compute the gain
 	gain = hinfnorm(usubs(usys, wcu));
-	
-	check_result(usys, wcu, freq);
+end
+
+function freq = pick_freq_grid(susys, info)	
+	freqs = [0, logspace(-6, 6, 150)]';
+	if info.uscale == 1
+		wcg = wcgain(susys);
+		freqs = unique([wcg.CriticalFrequency; freqs]);
+	else
+		[~, ~, robinfo] = robstab(susys, freqs);
+		freqs(robinfo.Bounds(:, 1) <= 1) = [];	
+	end
+	[~, ~, wcginfo] = wcgain(susys, freqs);
+	wcglb = wcginfo.Bounds(:, 1);
+	if info.uscale == 1
+		[~, maxind] = max(wcglb);
+		freq = freqs(maxind);
+	else
+		freq = [];
+	end
+	range = max(wcglb) - min(wcglb);
+	if info.uscale < 1
+		range = min([range, 100]);
+	end
+	[pks, pfreq] = findpeaks(wcglb, freqs, 'Threshold', 0.01 * range);
+	if isempty(pfreq)
+		[pks, pfreq] = findpeaks(wcglb, freqs, 'NPeaks', 1);
+	end
+	if isempty(pfreq)
+		keyboard;
+	end
+	if ~ismember(0, pfreq) && ismember(0, freqs)
+		% add zero
+		pks = [wcglb(1); pks];
+		pfreq = [freqs(1); pfreq];
+	end
+	if numel(pks) < 4
+		freq = [freq; pfreq];
+	else
+		[~, sortinds] = sort(pks, 'descend');
+		freq = [freq; pfreq(sortinds(1 : 4))];
+	end
+	freq = unique(freq);
 end
 
 function check_result(usys, wcu, freq)
@@ -77,25 +162,32 @@ function obj = eval_obj(usys, freq, rnames, dels)
 	end
 	[~, ~, info] = wcgain(usubs(usys, reals), freq);
 	obj = -sum(info.Bounds(:, 1));
+	if ~isfinite(obj)
+		obj = -1e10;
+	end
 end
 
-function [usys, freq, dnames, rnames, nr, info] = parse_input(usys, freq)
+function [c, ceq] = default_con(dels)
+	c = 0;
+	ceq = 0;
+end
+
+function [c, ceq] = robstab_con(usys, cfreq, rnames, dels)
+	ceq = 0; % no equality constraints
+	target_mu = 1;
+	for kk = 1 : numel(rnames)
+		reals.(rnames{kk}) = dels(kk);
+	end
+	sm = robstab(usubs(usys, reals), cfreq);	
+	c = target_mu - 1 / sm.LowerBound; % mu(cfreq) >= target_mu
+end
+
+function [dnames, rnames, nr] = process_system(usys)
 	% check usys
 	if ~isa(usys, 'uss')
 		error('The first input argument must be ''uss''');
 	end
-	% check frequencies
-	if ~isnumeric(freq)
-		error('The array of frequencies must be a numeric array.');
-	end
-	if numel(freq) ~= numel(unique(freq))
-		freq = unique(freq);
-		warning('Repeated frequencies removed.');
-	end
-	freq = reshape(freq, [1, numel(freq)]);
-	freq = sort(freq, 'ascend');
-	info.frequency = freq;
-	%find uncertainty names
+	% find uncertainty names
 	unames = fieldnames(usys.Uncertainty);
 	if isempty(unames)
 		error('The system has no uncertainty blocks.');
@@ -114,4 +206,39 @@ function [usys, freq, dnames, rnames, nr, info] = parse_input(usys, freq)
 			dnames{nd, 1} = uname;
 		end
 	end
+end
+
+function [susys, cfreq, info] = scale_for_robust_stability(usys, info)
+	% check robust stability
+	sm = robstab(usys);
+	if sm.LowerBound <= 1 % the system is not robustly stable => scale the unceratinty block
+		[M, delta] = lftdata(usys);
+		info.uscale = 1.01 * sm.UpperBound;
+		susys = lft(delta * info.uscale, M);
+		cfreq = sm.CriticalFrequency;
+	else
+		info.uscale = 1;
+		cfreq = [];
+		susys = usys;
+	end
+	% save frequencies
+	info.susys = susys;
+	info.cfreq = cfreq;
+end
+
+function [freq, info] = process_freq(freq, susys, info)
+	% check frequencies
+	if ~isnumeric(freq)
+		error('The array of frequencies must be a numeric array.');
+	end
+	if numel(freq) ~= numel(unique(freq))
+		freq = unique(freq);
+		warning('Repeated frequencies removed.');
+	end
+	freq = reshape(freq, [1, numel(freq)]);
+	freq = sort(freq, 'ascend');
+	% remove the frequency points where mu >= 1 from the set of frequencies
+	[~, ~, rinfo] = robstab(susys, freq);
+	freq(rinfo.Bounds(:, 1) <= 1) = [];
+	info.freq = freq;
 end

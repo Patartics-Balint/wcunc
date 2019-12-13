@@ -105,24 +105,7 @@ function [F, info] = bnpinterp(varargin)
 	B0 = H \ [-C0plus', C0minus'];
 	C0 = [C0plus; C0minus];
 	D0 = eye(2 * n);
-	nfreq = numel(freq);
-	if even(numel(z)) % no zero frequency
-		It = eye(nfreq);
-		T0 = [It, It; 1i * It, - 1i * It] / 2;	
-		T0inv = [It, - 1i * It; It, 1i * It];		
-	else % zero frequnecy
-		It = eye(nfreq - 1);
-		zc = zeros(nfreq - 1, 1);
-		T0 = [It/2, zc, It/2;...
-					zc', 1, zc';
-					1i * It/2, zc, -1i * It/2];
-		T0inv = [It, zc, -1i * It;...
-						 zc', 1, zc';
-						 It, zc, 1i * It];
-	end
-	Ar = real(T0 * A0 * T0inv);
-	Br = real(T0 * B0);
-	Cr = real(C0 * T0inv);
+	[Ar, Br, Cr] = transform_ss_matrices_to_real(A0, B0, C0, z);
 	Theta = ss(Ar, Br, Cr, D0);
 	info.Theta = Theta;
 
@@ -178,7 +161,12 @@ function [data, freq, G, n, data_is_scalar, info] = parse_input(input)
 	if numel(freq) ~= numel(unique(freq))
 		error('Repeated frequencies are not allowed.');
 	end
-	if size(data, 3) ~= numel(freq) && numel(data) ~= numel(freq)
+	[freq, sortind] = sort(freq);
+	if size(data, 3) == numel(freq)
+		data = data(:, :, sortind);
+	elseif numel(data) == numel(freq)
+		data = data(sortind);
+	else
 		error('The number of data samples and frequencies must be the same.');
 	end
 	data_is_scalar = (size(data, 3) == 1 &&...
@@ -204,4 +192,36 @@ function [data, freq, G, n, data_is_scalar, info] = parse_input(input)
 		end
 	end
 	info.G = G;
+end
+
+function [Ar, Br, Cr] = transform_ss_matrices_to_real(A0, B0, C0, z)
+	nfreq = numel(z(imag(z) >= 0));
+	if even(numel(z)) % no zero frequency
+		It = eye(nfreq);
+		T0 = [It, It; 1i * It, - 1i * It] / 2;	
+		T0inv = [It, - 1i * It; It, 1i * It];		
+	else % zero frequnecy
+		It = eye(nfreq - 1);
+		zc = zeros(nfreq - 1, 1);
+		T0 = [It/2, zc, It/2;...
+					zc', 1, zc';
+					1i * It/2, zc, -1i * It/2];
+		T0inv = [It, zc, -1i * It;...
+						 zc', 1, zc';
+						 It, zc, 1i * It];
+	end
+	Ar = T0 * A0 * T0inv;
+	Br = T0 * B0;
+	Cr = C0 * T0inv;
+	maximag = @(M)(max(abs(imag(M(:)))));
+	maxreal = @(M)(max(abs(real(M(:)))));
+	tol = 1e-6;
+	if maximag(Ar) > tol * maxreal(Ar) ||...
+		 maximag(Br) > tol * maxreal(Br) ||...
+		 maximag(Cr) > tol * maxreal(Cr)
+		error('The state-space matrices of Theta could not be transformed to real matrices.');
+	end
+	Ar = real(Ar);
+	Br = real(Br);
+	Cr = real(Cr);
 end
