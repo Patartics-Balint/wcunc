@@ -87,10 +87,10 @@ function [F, info] = bnpinterp(varargin)
 	rho = value(rho);
 	H = H + diag(rho);
 	if strfind(diagn.info, 'Infeasible')
-		error('Something went wrong. Optimisation infeasible.');
+		error('The boundary Pick matrix could not be found.');
 	end
 	if any(eig(H) <= 0)
-		error('Something went wrong when computing the Pick matrix.');
+		error('The boundary Pick matrix is not positive definite.');
 	end
 	if mod(numel(rho), 2) == 0 % zero is not among the frequency points
 		rho = rho(end / 2 + 1 : end);
@@ -125,7 +125,7 @@ function [F, info] = bnpinterp(varargin)
 
 	% check result
 	if max(real(eig(F))) > 0
-		error('Something went wrong. The interpolant is unstable.');
+		error('The interpolant is unstable.');
 	end
 	inds = find(imag(z) >= 0);
 	zchk = imag(z(inds));
@@ -139,10 +139,10 @@ function [F, info] = bnpinterp(varargin)
 	end
 	info.error = err;
 	if max(err) > 1e-5
-		error('Something went wrong. The fit is innacurate.');
+		error('The fit is innacurate.');
 	end
 	if hinfnorm(F) > 1 + 1e-2
-		error('Something went wrong. The H-inf norm of the interpolant is greater than 1.');
+		error('The H-inf norm of the interpolant is greater than 1.');
 	end
 	
 	% remove rows or colums corresponding to the zeros added to u and v
