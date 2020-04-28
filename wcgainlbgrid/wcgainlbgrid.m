@@ -1,4 +1,4 @@
-function [wcglb,wcu,critfreq] = wcgainlb(sys,w)
+function [wcglb, wcu] = wcgainlbgrid(sys,w)
 
 %% Get LFT Data
 % blk is nblk-by-3 matrix describing the uncertainty where 
@@ -41,7 +41,7 @@ RNG = RandStream('mt19937ar');
 
 %% Compute lower bound at each frequency
 Nw = numel(w);
-wcv = zeros(Nw,1);
+wcglb = zeros(Nw,1);
 PertData = cell(Nw,1);
 for i=1:Nw
     % Get frequency response
@@ -50,19 +50,14 @@ for i=1:Nw
     % Call wclowc:
     % This performs coordinatewise maximization over real parameters and
     % power iteration on complex blocks.
-    [wcv(i),pertsreal,pertrepreal,pertLvec,pertRvec,pertrepcomp] = ...
+    [wcglb(i),pertsreal,pertrepreal,pertLvec,pertRvec,pertrepcomp] = ...
         wclowc(m,index,NTIMES,MAXCNT,mMXGAIN,aMXGAIN,RNG);
     
     % Package Perturbation Data
     PertData{i} = localGetCriticalPert(index,nblk,...
-        pertsreal,pertrepreal,pertLvec,pertRvec,pertrepcomp);    
+        pertsreal,pertrepreal,pertLvec,pertRvec,pertrepcomp);
+		wcu(i) = getWorstCasePerturbation(sysB, sysmuB, PertData{i}, w(i));
 end
-
-
-%% Return largest lower bound found
-[wcglb,idx] = max(wcv);
-wcu = getWorstCasePerturbation(sysB,sysmuB,PertData{idx},w(idx));
-critfreq = w(idx);
 
 
 function PertData = localGetCriticalPert(bidx,nblk,...

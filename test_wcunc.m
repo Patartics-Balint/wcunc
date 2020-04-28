@@ -12,8 +12,8 @@ fprintf('Tests running...\n');
 delete('test_result.txt');
 diary('test_result.txt');
 
-warning off;
 for kk = 1 : n_examples - 1 % the algorithm takes forever to run for example 41
+	warning off;
 	fprintf('%d\t', kk);
 	load(sprintf('./examples/example%d', kk));
 	fprintf('given freqs.\t');

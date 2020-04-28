@@ -1,5 +1,5 @@
 1	given freqs.	pass
-	selected freqs.	fail	The interpolant is unstable.
+	selected freqs.	pass
 2	given freqs.	pass
 	selected freqs.	pass
 3	given freqs.	pass
@@ -7,8 +7,8 @@
 4	given freqs.	pass
 	selected freqs.	pass
 5	given freqs.	pass
-	selected freqs.	pass
-6	given freqs.	pass
+	selected freqs.	fail	The interpolant is unstable.
+6	given freqs.	fail	The interpolant is unstable.
 	selected freqs.	pass
 7	given freqs.	pass
 	selected freqs.	pass
@@ -34,8 +34,8 @@
 	selected freqs.	pass
 18	given freqs.	pass
 	selected freqs.	pass
-19	given freqs.	fail	The "Frequency" property of FRD models must be set to a vector of real and finite frequencies.
-	selected freqs.	fail	Expected Y to be nonempty.
+19	given freqs.	pass
+	selected freqs.	fail	Index exceeds matrix dimensions.
 20	given freqs.	fail	When specifying a frequency vector W, the nominal value of USYS must be stable.
 	selected freqs.	fail	When specifying a frequency vector W, the nominal value of USYS must be stable.
 21	given freqs.	pass
@@ -51,11 +51,11 @@
 26	given freqs.	pass
 	selected freqs.	fail	The "Frequency" property of FRD models must be set to a vector of real and finite frequencies.
 27	given freqs.	pass
-	selected freqs.	fail	The interpolant is unstable.
+	selected freqs.	pass
 28	given freqs.	pass
-	selected freqs.	pass
+	selected freqs.	fail	The interpolant is unstable.
 29	given freqs.	pass
-	selected freqs.	pass
+	selected freqs.	fail	The fit is innacurate.
 30	given freqs.	pass
 	selected freqs.	pass
 31	given freqs.	pass
@@ -67,14 +67,14 @@
 34	given freqs.	pass
 	selected freqs.	pass
 35	given freqs.	pass
-	selected freqs.	pass
-36	given freqs.	fail	The worst-case value of the parametric uncertainty could not be found.
+	selected freqs.	fail	Output argument "wcu" (and maybe others) not assigned during call to "wcgainlbgrid".
+36	given freqs.	pass
 	selected freqs.	fail	Index exceeds matrix dimensions.
 37	given freqs.	pass
-	selected freqs.	pass
+	selected freqs.	fail	Output argument "wcu" (and maybe others) not assigned during call to "wcgainlbgrid".
 38	given freqs.	pass
-	selected freqs.	pass
+	selected freqs.	fail	Index exceeds matrix dimensions.
 39	given freqs.	pass
 	selected freqs.	fail	Index exceeds matrix dimensions.
 40	given freqs.	pass
-	selected freqs.	pass
+	selected freqs.	fail	Index exceeds matrix dimensions.

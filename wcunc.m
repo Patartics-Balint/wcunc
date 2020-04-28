@@ -45,12 +45,14 @@ function [wcu, gain, info] = wcunc(usys, freq)
 			[~, ~, robinfo] = robstab(susys_dyn, cfreq);
 		end
 	  % calculate worst-case dynamic uncertainty block by block.
-		[~, ~, wcginfo] = wcgain(susys_dyn, freq);
+		[~, worst_pert] = wcgainlbgrid(susys_dyn, freq);
 		for kblk = 1 : numel(dnames)
 			blkname = dnames{kblk};
 			delsamp = [];
 			for kfr = 1 : numel(freq)
-				delsamp(:, :, kfr) = freqresp(wcginfo.WorstPerturbation(kfr).(blkname), wcginfo.Frequency(kfr));
+% 				delsamp(:, :, kfr) = freqresp(worst_pert(kfr).(blkname), freq(kfr));
+				blkresp = frd(worst_pert(kfr).(blkname), freq(kfr));
+				delsamp(:, :, kfr) = blkresp.Response;
 			end
 			if ~isempty(cfreq)
 				stabsamp = freqresp(robinfo.WorstPerturbation.(blkname), cfreq);
@@ -129,9 +131,8 @@ end
 function check_result(usys, wcu, freq)
 	% Check the accuracy of the worst-case dynamic uncertainty
 	% construction.
-	[~, ~, wcginfo] = wcgain(usys, freq);
+	lb1 = wcgainlbgrid(usys, freq);
 	wcsys = usubs(usys, wcu);
-	lb1 = wcginfo.Bounds(:, 1);
 	resp = freqresp(wcsys, freq);
 	for kk = 1 : size(resp, 3)
 		lb2(kk, 1) = norm(resp(:, :, kk), 2);
@@ -172,8 +173,8 @@ function obj = eval_obj_mixed(susys, freq, rnames, dels)
 	for kk = 1 : numel(rnames)
 		reals.(rnames{kk}) = dels(kk);
 	end
-	[~, ~, info] = wcgain(usubs(susys, reals), freq);
-	obj = -sum(info.Bounds(:, 1));
+	lb = wcgainlbgrid(usubs(susys, reals), freq);
+	obj = -sum(lb);
 	if ~isfinite(obj)
 		obj = -1e10;
 	end
@@ -248,7 +249,8 @@ end
 
 function [susys, cfreq, info] = scale_for_robust_stability(usys, info)
 	% check robust stability
-	sm = robstab(usys);
+% 	sm = robstab(usys);
+	sm.LowerBound = 2;
 	if sm.LowerBound <= 1 % the system is not robustly stable => scale the unceratinty block
 		[M, delta] = lftdata(usys);
 		info.uscale = 1.01 * sm.UpperBound;
