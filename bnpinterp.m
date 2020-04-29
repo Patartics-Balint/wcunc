@@ -40,7 +40,7 @@ function [F, info] = bnpinterp(varargin)
 		C0plus = C0minus;
 		for kk = 1 : numel(freq)
 			if rank(data(:, :, kk)) > 1
-				warning('The data to be interplated is not rank-one. Only the diad corresponding to the larges singular value is used.');
+				warning('The data to be interpolated is not rank-one. Only the diad corresponding to the larges singular value is used.');
 			end
 			[U, S, V] = svd(data(:, :, kk));
 			u = U(:, 1) * S(1, 1);
