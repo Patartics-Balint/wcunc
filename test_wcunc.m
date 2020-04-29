@@ -12,8 +12,8 @@ fprintf('Tests running...\n');
 delete('test_result.txt');
 diary('test_result.txt');
 
-warning off;
 for kk = 1 : n_examples - 1 % the algorithm takes forever to run for example 41
+	warning('off', 'all');
 	fprintf('%d\t', kk);
 	load(sprintf('./examples/example%d', kk));
 	fprintf('given freqs.\t');
@@ -33,3 +33,16 @@ for kk = 1 : n_examples - 1 % the algorithm takes forever to run for example 41
 end
 diary('off');
 warning on;
+
+% remove warnings form report
+report = fileread('test_result.txt');
+no_backspaces = regexp(report, '\b', 'split');
+report = strjoin(no_backspaces, '');
+no_warnings = regexp(report, '\[[^\]]+\]', 'split');
+report = strjoin(no_warnings, '');
+no_empty_lines = regexp(report, ' \n', 'split');
+report = strjoin(no_empty_lines, '');
+
+% write report into file
+file_id = fopen('test_result.txt', 'w');
+fprintf(file_id, report);
