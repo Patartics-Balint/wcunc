@@ -20,7 +20,7 @@ function [wcu, gain, info] = wcunc(usys, freq)
 	if nargin < 2
 		freq = pick_freq_grid(susys, info);
 	end
-	[freq, info] = process_freq(freq, susys, info);	
+	[freq, info] = process_freq(freq, susys, info);
 
 	if ~isempty(rnames) % there is parametric uncertainty in the system
 		[obj, con, delr_init] = pick_obj_con_and_init_val(susys, freq, cfreq, rnames, dnames);
@@ -45,14 +45,12 @@ function [wcu, gain, info] = wcunc(usys, freq)
 			[~, ~, robinfo] = robstab(susys_dyn, cfreq);
 		end
 	  % calculate worst-case dynamic uncertainty block by block.
-		[~, worst_pert] = wcgainlbgrid(susys_dyn, freq);
+		[~, wcpert] = wcgainlbgrid(susys_dyn, freq);
 		for kblk = 1 : numel(dnames)
 			blkname = dnames{kblk};
 			delsamp = [];
 			for kfr = 1 : numel(freq)
-% 				delsamp(:, :, kfr) = freqresp(worst_pert(kfr).(blkname), freq(kfr));
-				blkresp = frd(worst_pert(kfr).(blkname), freq(kfr));
-				delsamp(:, :, kfr) = blkresp.Response;
+				delsamp(:, :, kfr) = wcpert(kfr).(blkname);
 			end
 			if ~isempty(cfreq)
 				stabsamp = freqresp(robinfo.WorstPerturbation.(blkname), cfreq);
@@ -95,8 +93,7 @@ function freq = pick_freq_grid(susys, info)
 		[~, ~, robinfo] = robstab(susys, freqs);
 		freqs(robinfo.Bounds(:, 1) <= 1) = [];	
 	end
-	[~, ~, wcginfo] = wcgain(susys, freqs);
-	wcglb = wcginfo.Bounds(:, 1);
+	wcglb = wcgainlbgrid(susys, freqs);
 	if info.uscale == 1
 		[~, maxind] = max(wcglb);
 		freq = freqs(maxind);
@@ -249,8 +246,7 @@ end
 
 function [susys, cfreq, info] = scale_for_robust_stability(usys, info)
 	% check robust stability
-% 	sm = robstab(usys);
-	sm.LowerBound = 2;
+	sm = robstab(usys);
 	if sm.LowerBound <= 1 % the system is not robustly stable => scale the unceratinty block
 		[M, delta] = lftdata(usys);
 		info.uscale = 1.01 * sm.UpperBound;
