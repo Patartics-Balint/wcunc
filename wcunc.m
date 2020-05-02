@@ -23,12 +23,11 @@ function [wcu, gain, info] = wcunc(usys, freq)
 	[freq, info] = process_freq(freq, susys, info);
 
 	if ~isempty(rnames) % there is parametric uncertainty in the system
-		[obj, con, delr_init] = pick_obj_con_and_init_val(susys, freq, cfreq, rnames, dnames);
-		fminopt = optimset('Display', 'off');
-		[delropt, ~, exitflag] = fmincon(obj, delr_init, [], [], [], [],...
-			-ones(nr, 1), ones(nr, 1), con, fminopt);
-		if exitflag == -2
-			error('The worst-case value of the parametric uncertainty could not be found.');
+		[obj, con, delrdestab] = pick_obj_and_con(susys, freq, cfreq, rnames, dnames);
+		n_eval_max = 100;
+		delropt = hypercube_interval_search(nr, obj, con, delrdestab, n_eval_max);
+		if all(isnan(delropt))
+			delropt = delrdestab;
 		end
 		for kk = 1 : numel(rnames)
 			wcu.(rnames{kk}) = delropt(kk);
@@ -109,7 +108,7 @@ function freq = pick_freq_grid(susys, info)
 		[pks, pfreq] = findpeaks(wcglb, freqs, 'NPeaks', 1);
 	end
 	if isempty(pfreq)
-		keyboard;
+		warning('No peaks found in the worst-case gain lower bound.');
 	end
 	if ~ismember(0, pfreq) && ismember(0, freqs)
 		% add zero
@@ -139,15 +138,16 @@ function check_result(usys, wcu, freq)
 	end
 end
 
-function [obj, con, delr_init] = pick_obj_con_and_init_val(susys, freq, cfreq, rnames, dnames)
+function [obj, con, delrdestab] = pick_obj_and_con(susys, freq, cfreq, rnames, dnames)
+	nr = numel(rnames);
 	if isempty(dnames) % no dynamic uncertainty
 		obj = @(dels)(eval_obj_par(susys, freq, rnames, dels));
 	else % mixed uncertainty
 		obj = @(dels)(eval_obj_mixed(susys, freq, rnames, dels));
 	end
 	if isempty(cfreq)
-		con = @(dels)(eval_con_stab(dels)); % no constraints (always satisfied)
-		delr_init = zeros(numel(rnames), 1);
+		con = []; % no constraints
+		delrdestab = [];
 	else
 		if isempty(dnames) % no dynamic uncertainty
 			con = @(dels)(eval_con_unstab_par(susys, cfreq, rnames, dels));
@@ -156,9 +156,10 @@ function [obj, con, delr_init] = pick_obj_con_and_init_val(susys, freq, cfreq, r
 		else % mixed uncertainty
 			con = @(dels)(eval_con_unstab_mixed(susys, cfreq, rnames, dels));
 			[~, destab_unc] = robstab(susys, cfreq);
-		end			
-		for kk = 1 : numel(rnames)
-			delr_init(kk) = destab_unc.(rnames{kk});
+		end
+		delrdestab = zeros(nr, 1);
+		for kk = 1 : nr
+			delrdestab(kk) = destab_unc.(rnames{kk});
 		end
 	end
 end
@@ -190,11 +191,6 @@ function obj = eval_obj_par(susys, freq, rnames, dels)
 	if ~isfinite(obj)
 		obj = -1e10;
 	end
-end
-
-function [c, ceq] = eval_con_stab(dels)
-	c = 0;
-	ceq = 0;
 end
 
 function [c, ceq] = eval_con_unstab_mixed(usys, cfreq, rnames, dels)
@@ -277,4 +273,71 @@ function [freq, info] = process_freq(freq, susys, info)
 	[~, ~, rinfo] = robstab(susys, freq);
 	freq(rinfo.Bounds(:, 1) <= 1) = [];
 	info.freq = freq;
+end
+
+function delopt = hypercube_interval_search(n_dim, obj, con, delcon, n_eval_max)
+	if nargin < 3
+		con = [];
+	end
+	n_eval = 0;
+	% initial grid
+	grid = cell(n_dim, 1);
+	grid(:) = {linspace(-1, 1, 2)};
+	dels = allcomb(grid{:});
+	dels = [mean(dels, 2), dels];
+	n_dels = size(dels, 2);
+	objval = nan(1, n_dels);
+	ind = 1 : n_dels;
+	% split cubes
+	while n_eval <= n_eval_max
+		for kk = ind
+			delk = dels(:, kk);
+			if isempty(con) || con(delk) <= 0
+				objval(kk) = obj(delk);
+				n_eval = n_eval + 1;
+				if n_eval == n_eval_max
+					break;
+				end
+			end
+		end
+		if all(isnan(objval))
+% 			error('No feasible point found.');
+			distances = diag((dels - delcon)' *(dels - delcon));
+			[~, distsortind] = sort(distances);
+			closestind = distsortind(1);
+% 			if closestind == 1
+% 				closestind = distsortind(2);
+% 			end
+			dels(:, closestind) = delcon;
+			continue;
+		else
+			[~, sortind] = sort(objval);
+			minind = sortind(1);
+			if minind == 1 % the minimum is in the center
+				minind = sortind(2);
+			end
+			del_min = dels(:, minind);
+			del_cen = dels(:, 1);
+			objval_prev = objval;
+			objval = inf(size(objval));
+			what = mat2cell([del_min, del_cen]', 2, ones(1, n_dim));
+			dels = allcomb(what{:});
+			dels = [mean(dels, 2), dels];
+			d1ind = find(all(dels == del_min));
+			d2ind = find(all(dels == del_cen));
+			objval(d1ind) = objval_prev(minind);
+			objval(d2ind) = objval_prev(1);
+			ind = 1 : n_dels;
+			ind([d1ind, d2ind]) = [];
+		end
+	end
+	delopt = dels(:, minind);
+end
+
+function combs = allcomb(varargin)
+	n = numel(varargin);
+	ndgrid_output = cell(n, 1);
+	[ndgrid_output{:}] = ndgrid(varargin{:});
+	combs = cellfun(@(m)(reshape(m, [1, numel(m)])), ndgrid_output, 'UniformOutput', false);
+	combs = cell2mat(combs);
 end

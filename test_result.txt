@@ -30,9 +30,9 @@
 	selected freqs.	pass
 16	given freqs.	pass
 	selected freqs.	pass
-17	given freqs.	pass
+17	given freqs.	fail	The H-inf norm of the interpolant is greater than 1.
 	selected freqs.	pass
-18	given freqs.	pass
+18	given freqs.	fail	The H-inf norm of the interpolant is greater than 1.
 	selected freqs.	pass
 19	given freqs.	fail	The "Frequency" property of FRD models must be set to a vector of real and finite frequencies.
 	selected freqs.	fail	Expected Y to be nonempty.
@@ -47,15 +47,15 @@
 24	given freqs.	pass
 	selected freqs.	pass
 25	given freqs.	pass
-	selected freqs.	fail	The interpolant is unstable.
+	selected freqs.	pass
 26	given freqs.	pass
 	selected freqs.	fail	Expected X to be finite.
 27	given freqs.	pass
 	selected freqs.	pass
 28	given freqs.	pass
-	selected freqs.	pass
+	selected freqs.	fail	The H-inf norm of the interpolant is greater than 1.
 29	given freqs.	pass
-	selected freqs.	pass
+	selected freqs.	fail	The interpolant is unstable.
 30	given freqs.	pass
 	selected freqs.	pass
 31	given freqs.	pass
@@ -68,7 +68,7 @@
 	selected freqs.	pass
 35	given freqs.	pass
 	selected freqs.	pass
-36	given freqs.	fail	The worst-case value of the parametric uncertainty could not be found.
+36	given freqs.	pass
 	selected freqs.	pass
 37	given freqs.	pass
 	selected freqs.	pass
@@ -77,4 +77,6 @@
 39	given freqs.	pass
 	selected freqs.	pass
 40	given freqs.	pass
+	selected freqs.	pass
+41	given freqs.	pass
 	selected freqs.	pass
