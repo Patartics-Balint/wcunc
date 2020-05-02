@@ -6,6 +6,7 @@ function [wcu, wcsys, info] = wcunc(usys, freq)
 	%   [wcu, wcsys, info] = WCUNC(usys, freq)
 	% Inputs:
 	%   usys: uss
+	%   freq: Vector of frequencies where the gain of usys is to be maximised.
 	% Outputs:
 	%   wcu: Worst-case uncertainty. The gain of usubs(usys, wcu) is maximal
 	%   at the frequencies in freq.
@@ -23,14 +24,21 @@ function [wcu, wcsys, info] = wcunc(usys, freq)
 	[freq, info] = process_freq(freq, susys, info);
 
 	if ~isempty(rnames) % there is parametric uncertainty in the system
-		[obj, con, delrdestab] = pick_obj_and_con(susys, freq, cfreq, rnames, dnames);
-		n_eval_max = 100;
-		delropt = hypercube_interval_search(nr, obj, con, delrdestab, n_eval_max);
-		if all(isnan(delropt))
-			delropt = delrdestab;
-		end
-		for kk = 1 : numel(rnames)
-			wcu.(rnames{kk}) = delropt(kk);
+		if numel(freq) == 1 && isempty(cfreq)
+			[~, wcu_full] = wcgainlbgrid(usys, freq);
+			for kk = 1 : numel(rnames)
+				wcu.(rnames{kk}) = wcu_full.(rnames{kk});
+			end
+		else
+			[obj, con, delrdestab] = pick_obj_and_con(susys, freq, cfreq, rnames, dnames);
+			n_eval_max = 100;
+			delropt = hypercube_interval_search(nr, obj, con, delrdestab, n_eval_max);
+			if all(isnan(delropt))
+				delropt = delrdestab;
+			end
+			for kk = 1 : numel(rnames)
+				wcu.(rnames{kk}) = delropt(kk);
+			end
 		end
 	end
 	
