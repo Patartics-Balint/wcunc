@@ -1,15 +1,15 @@
-function [wcu, gain, info] = wcunc(usys, freq)
+function [wcu, wcsys, info] = wcunc(usys, freq)
 	% Calculate worst-case uncertainty which maximises the gain of an
 	% uncertain system at specified frequnecies.
 	%
 	% Usage
-	%   [wcu, gain, info] = WCUNC(usys, freq)
+	%   [wcu, wcsys, info] = WCUNC(usys, freq)
 	% Inputs:
 	%   usys: uss
 	% Outputs:
 	%   wcu: Worst-case uncertainty. The gain of usubs(usys, wcu) is maximal
 	%   at the frequencies in freq.
-	%   gain: hinfnorm(usubs(usys, wcu))
+	%   wcsys: usubs(usys, wcu)
 	%   info: Structure containing information about the interpolation for
 	%   each uncertainty block of the dynamic uncertainty.
 	%
@@ -80,7 +80,7 @@ function [wcu, gain, info] = wcunc(usys, freq)
 	end
 	info.ublk = ublk;
 	% compute the gain
-	gain = hinfnorm(usubs(usys, wcu));
+	wcsys = usubs(usys, wcu);
 end
 	
 function freq = pick_freq_grid(susys, info)	
