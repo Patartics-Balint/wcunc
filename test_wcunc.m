@@ -40,7 +40,7 @@ for kk = 1 : n_examples
 			obj_th = sum(obj_th);
 			obj = sigma(wcsys, info.freq);
 			obj = sum(obj(1, :));
-			fprintf('\t\ttime: %d sec\n\t\tobj.: %.2f%%\n', ceil(time), obj / obj_th * 100);
+			fprintf('\t\ttime: %d min\n\t\tobj.: %.2f%%\n', ceil(time / 60), obj / obj_th * 100);
 		else
 			fprintf(['fail\t', err.message, '\n']);
 		end

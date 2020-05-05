@@ -149,7 +149,11 @@ function check_result(usys, wcu, freq)
 	for kk = 1 : size(resp, 3)
 		lb2(kk, 1) = norm(resp(:, :, kk), 2);
 	end
-	if max(abs(lb2 - lb1)) > 1e-3
+	tol = 1e-3;
+	den = lb1;
+	den(den < 0.1 * tol) = 1;
+	err = abs(lb2 - lb1) ./ den;
+	if max(err) > tol
 		error('The gain of the system does not match the desired lower bound at the specified frequnecies.');
 	end
 end
