@@ -56,18 +56,26 @@ function [wcu, wcsys, info] = wcunc(usys, freq)
 		for kblk = 1 : numel(dnames)
 			blkname = dnames{kblk};
 			delsamp = [];
+			lvec = [];
+			rvec = [];
 			for kfr = 1 : numel(freq)
-				delsamp(:, :, kfr) = wcpert(kfr).(blkname);
+				lvec(:, kfr) = wcpert(kfr).(blkname){1};
+				rvec(:, kfr) = wcpert(kfr).(blkname){2}';
 			end
 			if ~isempty(cfreq)
 				stabsamp = freqresp(robinfo.WorstPerturbation.(blkname), cfreq);
+				[l, s, r] = svd(stabsamp);
+				l = l(:, 1) * sqrt(s(1));
+				r = r(:, 1) * sqrt(s(1));
 				if ~isempty(freq)
-					delsamp(:, :, end + 1) = stabsamp;
+					lvec(:, end + 1) = l;
+					rvec(:, end + 1) = r;
 				else
-					delsamp = stabsamp;
+					lvec = l;
+					rvec = r;
 				end
 			end
-			[wcublk, infoblk] = bnpinterp(delsamp, [freq, cfreq]);
+			[wcublk, infoblk] = bnpinterp({lvec, rvec}, [freq, cfreq]);
 			info.(blkname) = infoblk;
 			wcu.(blkname) = wcublk;			
 		end
@@ -87,7 +95,7 @@ function [wcu, wcsys, info] = wcunc(usys, freq)
 		ublk = blkdiag(ublk, wcu.(name));
 	end
 	info.ublk = ublk;
-	% compute the gain
+	% substitute worst-case uncertainty
 	wcsys = usubs(usys, wcu);
 end
 	
@@ -141,7 +149,11 @@ function check_result(usys, wcu, freq)
 	for kk = 1 : size(resp, 3)
 		lb2(kk, 1) = norm(resp(:, :, kk), 2);
 	end
-	if max(abs(lb2 - lb1)) > 1e-3
+	tol = 1e-3;
+	den = lb1;
+	den(den < 0.1 * tol) = 1;
+	err = abs(lb2 - lb1) ./ den;
+	if max(err) > tol
 		error('The gain of the system does not match the desired lower bound at the specified frequnecies.');
 	end
 end

@@ -16,20 +16,35 @@ for kk = 1 : n_examples
 	warning('off', 'all');
 	fprintf('%d\t', kk);
 	load(sprintf('./examples/example%d', kk));
-	fprintf('given freqs.\t');
-	try 
-		[wcu, wcg, info] = wcunc(usys, freq);
-		fprintf('pass\n');
-	catch err
-		fprintf(['fail\t', err.message, '\n']);
+	for tc = 1 : 2
+		if tc == 1
+			fprintf('given freqs.\t');
+			input = {usys, freq};
+		elseif tc == 2
+			fprintf('\tselected freqs.\t');
+			input = {usys};
+		else
+			error('Test case not recognised.');
+		end
+		try
+			tic;
+			[wcu, wcsys, info] = wcunc(input{:});
+			time = toc;
+			pass = true;
+		catch err
+			pass = false;
+		end
+		if pass
+			fprintf('pass\n');
+			obj_th = wcgainlbgrid(usys, info.freq);
+			obj_th = sum(obj_th);
+			obj = sigma(wcsys, info.freq);
+			obj = sum(obj(1, :));
+			fprintf('\t\ttime: %d min\n\t\tobj.: %.2f%%\n', ceil(time / 60), obj / obj_th * 100);
+		else
+			fprintf(['fail\t', err.message, '\n']);
+		end
 	end
-	fprintf('\tselected freqs.\t');
-	try 
-		[wcu, wcg, info] = wcunc(usys);
-		fprintf('pass\n');
-	catch err
-		fprintf(['fail\t', err.message, '\n']);
-	end	
 end
 diary('off');
 warning on;
