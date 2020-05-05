@@ -29,30 +29,8 @@ function [F, info] = bnpinterp(varargin)
 	%
 	% See also cnum2sys, wcgain
 	
-	[data, freq, G, n, data_is_scalar, info] = parse_input(varargin);
+	[C0minus, C0plus, freq, G, nr, nc, n, info] = parse_input(varargin);
 	
-	% build C0minus and C0plus
-	if data_is_scalar
-		C0minus = ones(size(data));
-		C0plus = data;
-	else		
-		C0minus = zeros(n, numel(freq));
-		C0plus = C0minus;
-		for kk = 1 : numel(freq)
-			if rank(data(:, :, kk)) > 1
-				warning('The data to be interplated is not rank-one. Only the diad corresponding to the larges singular value is used.');
-			end
-			[U, S, V] = svd(data(:, :, kk));
-			u = U(:, 1) * S(1, 1);
-			v = V(:, 1);
-			% add zeros when numel(u) ~= numel(v)
-			u = [u; zeros(n - numel(u), 1)];
-			v = [v; zeros(n - numel(v), 1)];
-			C0minus(:, kk) = v;
-			C0plus(:, kk) = u;
-		end
-	end
-
 	% add complex conjugates
 	z = freq * 1i;
 	z = [conj(z), z];
@@ -102,7 +80,7 @@ function [F, info] = bnpinterp(varargin)
 
 	% construct Theta
 	A0 = diag(z);
-	B0 = H \ [-C0plus', C0minus'];
+	B0 = inv(H) * [-C0plus', C0minus'];
 	C0 = [C0plus; C0minus];
 	D0 = eye(2 * n);
 	[Ar, Br, Cr] = transform_ss_matrices_to_real(A0, B0, C0, z);
@@ -115,13 +93,13 @@ function [F, info] = bnpinterp(varargin)
 	Theta22 = Theta(n + 1 : end, n + 1 : end);
 	
 	% construct interpolant
-	Fnum = ss([Theta11.a, Theta11.b * G.c; zeros(order(G), order(Theta11)), G.a],...
-		[Theta12.b + Theta11.b * G.d; G.b], [Theta11.c, G.c], G.d);
-	Fden = ss([Theta21.a, Theta21.b * G.c; zeros(order(G), order(Theta22)), G.a],...
-		[Theta22.b + Theta21.b * G.d; G.b], [Theta21.c, zeros(size(Theta21, 1), order(G))], eye(size(Theta21, 1)));
-	[A, B, C1, D] = ssdata(Fnum);
-	[~, ~, C2, ~] = ssdata(Fden);
-	F = ss(A - B * C2, B, C1 - D * C2, D);
+	Anum = [Theta11.a, Theta11.b * G.c; zeros(order(G), order(Theta11)), G.a];
+	Bnum = [Theta12.b + Theta11.b * G.d; G.b];
+	Cnum = [Theta11.c, G.c];
+	Dnum = G.d;
+	Cden = [Theta21.c, zeros(size(Theta21, 1), order(G))];
+	F = ss(Anum - Bnum * Cden, Bnum, Cnum - Dnum * Cden, Dnum);
+	F = sminreal(F);
 
 	% check result
 	if max(real(eig(F))) > 0
@@ -146,13 +124,11 @@ function [F, info] = bnpinterp(varargin)
 	end
 	
 	% remove rows or colums corresponding to the zeros added to u and v
-	if ~data_is_scalar
-		F = F(1 : size(data, 1), 1 : size(data, 2));
-	end
+	F = F(1 : nr, 1 : nc);
 end
 
-function [data, freq, G, n, data_is_scalar, info] = parse_input(input)
-	data = input{1};
+function [C0minus, C0plus, freq, G, nr, nc, n, info] = parse_input(input)
+	% sort frequencies
 	freq = input{2};
 	freq = reshape(freq, [1, numel(freq)]);
 	if any(freq < 0)
@@ -162,24 +138,58 @@ function [data, freq, G, n, data_is_scalar, info] = parse_input(input)
 		error('Repeated frequencies are not allowed.');
 	end
 	[freq, sortind] = sort(freq);
-	if size(data, 3) == numel(freq)
-		data = data(:, :, sortind);
-	elseif numel(data) == numel(freq)
-		data = data(sortind);
+	
+	% sort out the interpolation data
+	data = input{1};
+	if iscell(data) % data contains left and right vectors
+		C0plus = data{1};
+		C0minus = data{2};
+		C0plus = C0plus(:, sortind);
+		C0minus = C0minus(:, sortind);
+	elseif isnumeric(data) % data contains the matrices to be interpolated
+		if size(data, 3) == numel(freq)
+			data = data(:, :, sortind);
+		elseif numel(data) == numel(freq)
+			data = data(sortind);
+		else
+			error('The number of data samples and frequencies must be the same.');
+		end
+		data_is_scalar = (size(data, 3) == 1 &&...
+			(size(data, 1) == 1 || size(data, 2) == 1) && numel(freq) > 1) ||...
+			numel(data) == numel(freq);
+		info.frequency = freq;
+		info.data = data;
+		if data_is_scalar
+			data = reshape(data, [1, numel(data)]);		
+		end
+		if data_is_scalar
+			C0minus = ones(size(data));
+			C0plus = data;
+		else		
+			C0minus = zeros(size(data, 1), numel(freq));
+			C0plus = zeros(size(data, 2), numel(freq));
+			for kk = 1 : numel(freq)
+				if rank(data(:, :, kk)) > 1
+					warning('The data to be interpolated is not rank-one. Only the diad corresponding to the larges singular value is used.');
+				end
+				[U, S, V] = svd(data(:, :, kk));
+				u = U(:, 1) * S(1, 1);
+				v = V(:, 1);
+				C0minus(:, kk) = v;
+				C0plus(:, kk) = u;
+			end
+		end
 	else
-		error('The number of data samples and frequencies must be the same.');
+		error('The first input is either a numeric or a cell array.');
 	end
-	data_is_scalar = (size(data, 3) == 1 &&...
-		(size(data, 1) == 1 || size(data, 2) == 1) && numel(freq) > 1) ||...
-		numel(data) == numel(freq);
-	info.frequency = freq;
-	info.data = data;
-	if data_is_scalar
-		data = reshape(data, [1, numel(data)]);		
-		n = 1;
-	else
-		n = max([size(data, 1), size(data, 2)]);
-	end
+	% add zeros when numel(u) ~= numel(v)
+	nr = size(C0plus, 1);
+	nc = size(C0minus, 1);
+	n = max([nr, nc]);
+	C0minus = [C0minus; zeros(n - nc, numel(freq))];
+	C0plus = [C0plus; zeros(n - nr, numel(freq))];
+	
+	% find G
 	if numel(input) < 3
 		G = ss(eye(n));
 	else

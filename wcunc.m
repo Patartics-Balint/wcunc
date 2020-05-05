@@ -1,15 +1,16 @@
-function [wcu, gain, info] = wcunc(usys, freq)
+function [wcu, wcsys, info] = wcunc(usys, freq)
 	% Calculate worst-case uncertainty which maximises the gain of an
 	% uncertain system at specified frequnecies.
 	%
 	% Usage
-	%   [wcu, gain, info] = WCUNC(usys, freq)
+	%   [wcu, wcsys, info] = WCUNC(usys, freq)
 	% Inputs:
 	%   usys: uss
+	%   freq: Vector of frequencies where the gain of usys is to be maximised.
 	% Outputs:
 	%   wcu: Worst-case uncertainty. The gain of usubs(usys, wcu) is maximal
 	%   at the frequencies in freq.
-	%   gain: hinfnorm(usubs(usys, wcu))
+	%   wcsys: usubs(usys, wcu)
 	%   info: Structure containing information about the interpolation for
 	%   each uncertainty block of the dynamic uncertainty.
 	%
@@ -20,18 +21,24 @@ function [wcu, gain, info] = wcunc(usys, freq)
 	if nargin < 2
 		freq = pick_freq_grid(susys, info);
 	end
-	[freq, info] = process_freq(freq, susys, info);	
+	[freq, info] = process_freq(freq, susys, info);
 
 	if ~isempty(rnames) % there is parametric uncertainty in the system
-		[obj, con, delr_init] = pick_obj_con_and_init_val(susys, freq, cfreq, rnames, dnames);
-		fminopt = optimset('Display', 'off');
-		[delropt, ~, exitflag] = fmincon(obj, delr_init, [], [], [], [],...
-			-ones(nr, 1), ones(nr, 1), con, fminopt);
-		if exitflag == -2
-			error('The worst-case value of the parametric uncertainty could not be found.');
-		end
-		for kk = 1 : numel(rnames)
-			wcu.(rnames{kk}) = delropt(kk);
+		if numel(freq) == 1 && isempty(cfreq)
+			[~, wcu_full] = wcgainlbgrid(usys, freq);
+			for kk = 1 : numel(rnames)
+				wcu.(rnames{kk}) = wcu_full.(rnames{kk});
+			end
+		else
+			[obj, con, delrdestab] = pick_obj_and_con(susys, freq, cfreq, rnames, dnames);
+			n_eval_max = 100;
+			delropt = hypercube_interval_search(nr, obj, con, delrdestab, n_eval_max);
+			if all(isnan(delropt))
+				delropt = delrdestab;
+			end
+			for kk = 1 : numel(rnames)
+				wcu.(rnames{kk}) = delropt(kk);
+			end
 		end
 	end
 	
@@ -45,22 +52,30 @@ function [wcu, gain, info] = wcunc(usys, freq)
 			[~, ~, robinfo] = robstab(susys_dyn, cfreq);
 		end
 	  % calculate worst-case dynamic uncertainty block by block.
-		[~, ~, wcginfo] = wcgain(susys_dyn, freq);
+		[~, wcpert] = wcgainlbgrid(susys_dyn, freq);
 		for kblk = 1 : numel(dnames)
 			blkname = dnames{kblk};
 			delsamp = [];
+			lvec = [];
+			rvec = [];
 			for kfr = 1 : numel(freq)
-				delsamp(:, :, kfr) = freqresp(wcginfo.WorstPerturbation(kfr).(blkname), wcginfo.Frequency(kfr));
+				lvec(:, kfr) = wcpert(kfr).(blkname){1};
+				rvec(:, kfr) = wcpert(kfr).(blkname){2}';
 			end
 			if ~isempty(cfreq)
 				stabsamp = freqresp(robinfo.WorstPerturbation.(blkname), cfreq);
+				[l, s, r] = svd(stabsamp);
+				l = l(:, 1) * sqrt(s(1));
+				r = r(:, 1) * sqrt(s(1));
 				if ~isempty(freq)
-					delsamp(:, :, end + 1) = stabsamp;
+					lvec(:, end + 1) = l;
+					rvec(:, end + 1) = r;
 				else
-					delsamp = stabsamp;
+					lvec = l;
+					rvec = r;
 				end
 			end
-			[wcublk, infoblk] = bnpinterp(delsamp, [freq, cfreq]);
+			[wcublk, infoblk] = bnpinterp({lvec, rvec}, [freq, cfreq]);
 			info.(blkname) = infoblk;
 			wcu.(blkname) = wcublk;			
 		end
@@ -80,8 +95,8 @@ function [wcu, gain, info] = wcunc(usys, freq)
 		ublk = blkdiag(ublk, wcu.(name));
 	end
 	info.ublk = ublk;
-	% compute the gain
-	gain = hinfnorm(usubs(usys, wcu));
+	% substitute worst-case uncertainty
+	wcsys = usubs(usys, wcu);
 end
 	
 function freq = pick_freq_grid(susys, info)	
@@ -93,8 +108,7 @@ function freq = pick_freq_grid(susys, info)
 		[~, ~, robinfo] = robstab(susys, freqs);
 		freqs(robinfo.Bounds(:, 1) <= 1) = [];	
 	end
-	[~, ~, wcginfo] = wcgain(susys, freqs);
-	wcglb = wcginfo.Bounds(:, 1);
+	wcglb = wcgainlbgrid(susys, freqs);
 	if info.uscale == 1
 		[~, maxind] = max(wcglb);
 		freq = freqs(maxind);
@@ -110,7 +124,7 @@ function freq = pick_freq_grid(susys, info)
 		[pks, pfreq] = findpeaks(wcglb, freqs, 'NPeaks', 1);
 	end
 	if isempty(pfreq)
-		keyboard;
+		warning('No peaks found in the worst-case gain lower bound.');
 	end
 	if ~ismember(0, pfreq) && ismember(0, freqs)
 		% add zero
@@ -129,27 +143,31 @@ end
 function check_result(usys, wcu, freq)
 	% Check the accuracy of the worst-case dynamic uncertainty
 	% construction.
-	[~, ~, wcginfo] = wcgain(usys, freq);
+	lb1 = wcgainlbgrid(usys, freq);
 	wcsys = usubs(usys, wcu);
-	lb1 = wcginfo.Bounds(:, 1);
 	resp = freqresp(wcsys, freq);
 	for kk = 1 : size(resp, 3)
 		lb2(kk, 1) = norm(resp(:, :, kk), 2);
 	end
-	if max(abs(lb2 - lb1)) > 1e-3
+	tol = 1e-3;
+	den = lb1;
+	den(den < 0.1 * tol) = 1;
+	err = abs(lb2 - lb1) ./ den;
+	if max(err) > tol
 		error('The gain of the system does not match the desired lower bound at the specified frequnecies.');
 	end
 end
 
-function [obj, con, delr_init] = pick_obj_con_and_init_val(susys, freq, cfreq, rnames, dnames)
+function [obj, con, delrdestab] = pick_obj_and_con(susys, freq, cfreq, rnames, dnames)
+	nr = numel(rnames);
 	if isempty(dnames) % no dynamic uncertainty
 		obj = @(dels)(eval_obj_par(susys, freq, rnames, dels));
 	else % mixed uncertainty
 		obj = @(dels)(eval_obj_mixed(susys, freq, rnames, dels));
 	end
 	if isempty(cfreq)
-		con = @(dels)(eval_con_stab(dels)); % no constraints (always satisfied)
-		delr_init = zeros(numel(rnames), 1);
+		con = []; % no constraints
+		delrdestab = [];
 	else
 		if isempty(dnames) % no dynamic uncertainty
 			con = @(dels)(eval_con_unstab_par(susys, cfreq, rnames, dels));
@@ -158,9 +176,10 @@ function [obj, con, delr_init] = pick_obj_con_and_init_val(susys, freq, cfreq, r
 		else % mixed uncertainty
 			con = @(dels)(eval_con_unstab_mixed(susys, cfreq, rnames, dels));
 			[~, destab_unc] = robstab(susys, cfreq);
-		end			
-		for kk = 1 : numel(rnames)
-			delr_init(kk) = destab_unc.(rnames{kk});
+		end
+		delrdestab = zeros(nr, 1);
+		for kk = 1 : nr
+			delrdestab(kk) = destab_unc.(rnames{kk});
 		end
 	end
 end
@@ -172,8 +191,8 @@ function obj = eval_obj_mixed(susys, freq, rnames, dels)
 	for kk = 1 : numel(rnames)
 		reals.(rnames{kk}) = dels(kk);
 	end
-	[~, ~, info] = wcgain(usubs(susys, reals), freq);
-	obj = -sum(info.Bounds(:, 1));
+	lb = wcgainlbgrid(usubs(susys, reals), freq);
+	obj = -sum(lb);
 	if ~isfinite(obj)
 		obj = -1e10;
 	end
@@ -192,11 +211,6 @@ function obj = eval_obj_par(susys, freq, rnames, dels)
 	if ~isfinite(obj)
 		obj = -1e10;
 	end
-end
-
-function [c, ceq] = eval_con_stab(dels)
-	c = 0;
-	ceq = 0;
 end
 
 function [c, ceq] = eval_con_unstab_mixed(usys, cfreq, rnames, dels)
@@ -279,4 +293,71 @@ function [freq, info] = process_freq(freq, susys, info)
 	[~, ~, rinfo] = robstab(susys, freq);
 	freq(rinfo.Bounds(:, 1) <= 1) = [];
 	info.freq = freq;
+end
+
+function delopt = hypercube_interval_search(n_dim, obj, con, delcon, n_eval_max)
+	if nargin < 3
+		con = [];
+	end
+	n_eval = 0;
+	% initial grid
+	grid = cell(n_dim, 1);
+	grid(:) = {linspace(-1, 1, 2)};
+	dels = allcomb(grid{:});
+	dels = [mean(dels, 2), dels];
+	n_dels = size(dels, 2);
+	objval = nan(1, n_dels);
+	ind = 1 : n_dels;
+	% split cubes
+	while n_eval <= n_eval_max
+		for kk = ind
+			delk = dels(:, kk);
+			if isempty(con) || con(delk) <= 0
+				objval(kk) = obj(delk);
+				n_eval = n_eval + 1;
+				if n_eval == n_eval_max
+					break;
+				end
+			end
+		end
+		if all(isnan(objval))
+% 			error('No feasible point found.');
+			distances = diag((dels - delcon)' *(dels - delcon));
+			[~, distsortind] = sort(distances);
+			closestind = distsortind(1);
+% 			if closestind == 1
+% 				closestind = distsortind(2);
+% 			end
+			dels(:, closestind) = delcon;
+			continue;
+		else
+			[~, sortind] = sort(objval);
+			minind = sortind(1);
+			if minind == 1 % the minimum is in the center
+				minind = sortind(2);
+			end
+			del_min = dels(:, minind);
+			del_cen = dels(:, 1);
+			objval_prev = objval;
+			objval = inf(size(objval));
+			what = mat2cell([del_min, del_cen]', 2, ones(1, n_dim));
+			dels = allcomb(what{:});
+			dels = [mean(dels, 2), dels];
+			d1ind = find(all(dels == del_min));
+			d2ind = find(all(dels == del_cen));
+			objval(d1ind) = objval_prev(minind);
+			objval(d2ind) = objval_prev(1);
+			ind = 1 : n_dels;
+			ind([d1ind, d2ind]) = [];
+		end
+	end
+	delopt = dels(:, minind);
+end
+
+function combs = allcomb(varargin)
+	n = numel(varargin);
+	ndgrid_output = cell(n, 1);
+	[ndgrid_output{:}] = ndgrid(varargin{:});
+	combs = cellfun(@(m)(reshape(m, [1, numel(m)])), ndgrid_output, 'UniformOutput', false);
+	combs = cell2mat(combs);
 end
