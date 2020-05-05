@@ -1,84 +1,216 @@
 1	given freqs.	pass
+		time: 2 sec
+		obj.: 100.00%
 	selected freqs.	pass
+		time: 5 sec
+		obj.: 100.00%
 2	given freqs.	fail	The H-inf norm of the interpolant is greater than 1.
 	selected freqs.	pass
+		time: 8 sec
+		obj.: 100.00%
 3	given freqs.	pass
+		time: 2 sec
+		obj.: 100.00%
 	selected freqs.	pass
+		time: 5 sec
+		obj.: 100.00%
 4	given freqs.	pass
+		time: 1 sec
+		obj.: 100.00%
 	selected freqs.	pass
+		time: 9 sec
+		obj.: 100.00%
 5	given freqs.	pass
+		time: 2 sec
+		obj.: 100.00%
 	selected freqs.	pass
+		time: 8 sec
+		obj.: 100.03%
 6	given freqs.	pass
+		time: 1 sec
+		obj.: 100.00%
 	selected freqs.	pass
+		time: 4 sec
+		obj.: 100.00%
 7	given freqs.	pass
+		time: 3 sec
+		obj.: 100.00%
 	selected freqs.	pass
+		time: 12 sec
+		obj.: 100.00%
 8	given freqs.	pass
+		time: 1 sec
+		obj.: 96.65%
 	selected freqs.	fail	Expected X to be finite.
 9	given freqs.	pass
+		time: 43 sec
+		obj.: 94.40%
 	selected freqs.	pass
+		time: 55 sec
+		obj.: 91.45%
 10	given freqs.	pass
+		time: 7 sec
+		obj.: 99.97%
 	selected freqs.	pass
+		time: 25 sec
+		obj.: 91.54%
 11	given freqs.	pass
+		time: 10 sec
+		obj.: 100.00%
 	selected freqs.	pass
+		time: 14 sec
+		obj.: 100.00%
 12	given freqs.	pass
+		time: 19 sec
+		obj.: 96.22%
 	selected freqs.	fail	Expected X to be finite.
 13	given freqs.	pass
+		time: 39 sec
+		obj.: 98.82%
 	selected freqs.	pass
+		time: 41 sec
+		obj.: 100.00%
 14	given freqs.	pass
+		time: 49 sec
+		obj.: 100.00%
 	selected freqs.	pass
+		time: 93 sec
+		obj.: 100.00%
 15	given freqs.	pass
+		time: 51 sec
+		obj.: 100.70%
 	selected freqs.	pass
+		time: 40 sec
+		obj.: 100.00%
 16	given freqs.	pass
+		time: 37 sec
+		obj.: 87.83%
 	selected freqs.	pass
+		time: 31 sec
+		obj.: 85.32%
 17	given freqs.	fail	The H-inf norm of the interpolant is greater than 1.
 	selected freqs.	fail	The interpolant is unstable.
 18	given freqs.	fail	The H-inf norm of the interpolant is greater than 1.
 	selected freqs.	pass
+		time: 33 sec
+		obj.: 89.94%
 19	given freqs.	fail	The "Frequency" property of FRD models must be set to a vector of real and finite frequencies.
 	selected freqs.	fail	Expected Y to be nonempty.
 20	given freqs.	fail	When specifying a frequency vector W, the nominal value of USYS must be stable.
 	selected freqs.	fail	When specifying a frequency vector W, the nominal value of USYS must be stable.
 21	given freqs.	pass
+		time: 50 sec
+		obj.: 100.00%
 	selected freqs.	pass
+		time: 79 sec
+		obj.: 100.00%
 22	given freqs.	pass
+		time: 315 sec
+		obj.: 97.82%
 	selected freqs.	pass
+		time: 255 sec
+		obj.: 93.97%
 23	given freqs.	fail	When specifying a frequency vector W, the nominal value of USYS must be stable.
 	selected freqs.	fail	When specifying a frequency vector W, the nominal value of USYS must be stable.
 24	given freqs.	pass
+		time: 13 sec
+		obj.: 100.00%
 	selected freqs.	pass
+		time: 13 sec
+		obj.: 100.01%
 25	given freqs.	pass
+		time: 55 sec
+		obj.: 100.00%
 	selected freqs.	pass
+		time: 89 sec
+		obj.: 99.99%
 26	given freqs.	pass
+		time: 24 sec
+		obj.: 99.99%
 	selected freqs.	fail	Expected X to be finite.
 27	given freqs.	pass
+		time: 16 sec
+		obj.: 91.56%
 	selected freqs.	pass
+		time: 21 sec
+		obj.: 87.59%
 28	given freqs.	pass
+		time: 31 sec
+		obj.: 100.00%
 	selected freqs.	fail	The H-inf norm of the interpolant is greater than 1.
 29	given freqs.	pass
+		time: 15 sec
+		obj.: 92.50%
 	selected freqs.	pass
+		time: 15 sec
+		obj.: 89.94%
 30	given freqs.	pass
+		time: 21 sec
+		obj.: 92.10%
 	selected freqs.	pass
+		time: 16 sec
+		obj.: 84.87%
 31	given freqs.	pass
+		time: 73 sec
+		obj.: 100.00%
 	selected freqs.	pass
+		time: 29 sec
+		obj.: 100.00%
 32	given freqs.	pass
+		time: 2 sec
+		obj.: 100.00%
 	selected freqs.	pass
+		time: 8 sec
+		obj.: 100.00%
 33	given freqs.	pass
+		time: 5 sec
+		obj.: 100.00%
 	selected freqs.	pass
+		time: 8 sec
+		obj.: 100.00%
 34	given freqs.	fail	The H-inf norm of the interpolant is greater than 1.
 	selected freqs.	pass
+		time: 10 sec
+		obj.: 100.00%
 35	given freqs.	pass
+		time: 12 sec
+		obj.: 0.00%
 	selected freqs.	fail	The interpolant is unstable.
 36	given freqs.	pass
+		time: 12 sec
+		obj.: 18.75%
 	selected freqs.	pass
+		time: 177 sec
+		obj.: 82.57%
 37	given freqs.	pass
+		time: 16 sec
+		obj.: 0.00%
 	selected freqs.	pass
+		time: 36 sec
+		obj.: 0.00%
 38	given freqs.	pass
+		time: 19 sec
+		obj.: 0.00%
 	selected freqs.	pass
+		time: 49 sec
+		obj.: 0.00%
 39	given freqs.	pass
+		time: 24 sec
+		obj.: 0.00%
 	selected freqs.	pass
+		time: 53 sec
+		obj.: 0.00%
 40	given freqs.	pass
+		time: 23 sec
+		obj.: 0.00%
 	selected freqs.	pass
+		time: 67 sec
+		obj.: 0.00%
 41	given freqs.	pass
+		time: 17 sec
+		obj.: 100.00%
 	selected freqs.	pass
+		time: 25 sec
+		obj.: 100.00%
 42	given freqs.	fail	The gain of the system does not match the desired lower bound at the specified frequnecies.
 	selected freqs.	fail	The gain of the system does not match the desired lower bound at the specified frequnecies.
