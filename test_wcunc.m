@@ -16,9 +16,11 @@ cnames = {'given', 'selected'};
 res = cell(n_examples, 1);
 
 % run tests
-for kk = 1 : n_examples
+parfor kk = 1 : n_examples
 	warning('off', 'all');
-	load(sprintf('./examples/example%d', kk));
+	ex_data = load(sprintf('./examples/example%d', kk));
+	usys = ex_data.usys;
+	freq = ex_data.freq;
 	for tc = 1 : n_tc
 		if tc == 1
 			input = {usys, freq};
@@ -47,12 +49,11 @@ for kk = 1 : n_examples
 			obj = [];
 			time = [];
 		end
-		resk.(cnames{tc}).pass = pass;
-		resk.(cnames{tc}).obj = obj;
-		resk.(cnames{tc}).time = time;
-		resk.(cnames{tc}).er = er;
+		res{kk}.(cnames{tc}).pass = pass;
+		res{kk}.(cnames{tc}).obj = obj;
+		res{kk}.(cnames{tc}).time = time;
+		res{kk}.(cnames{tc}).er = er;
 	end
-	res{kk} = resk;
 	fprintf('\b|\n');
 end
 warning on;
