@@ -1,27 +1,28 @@
 clear;
 clc;
 
+report_filename = 'test_result.txt';
 test_path = which(mfilename);
 path_parts = strsplit(test_path, '/');
 test_dir = strjoin(path_parts(1 : end - 1), '/');
 cd(test_dir);
 
-n_examples = size(dir('examples/')) - 2;
+n_examples = size(dir('examples/'), 1) - 2;
+n_tc = 2;
 fprintf('Tests running...\n');
+fprintf('%s\n\n', repmat('.', [1, n_examples]));
 
-delete('test_result.txt');
-diary('test_result.txt');
+cnames = {'given', 'selected'};
+res = cell(n_examples, 1);
 
+% run tests
 for kk = 1 : n_examples
 	warning('off', 'all');
-	fprintf('%d\t', kk);
 	load(sprintf('./examples/example%d', kk));
-	for tc = 1 : 2
+	for tc = 1 : n_tc
 		if tc == 1
-			fprintf('given freqs.\t');
 			input = {usys, freq};
 		elseif tc == 2
-			fprintf('\tselected freqs.\t');
 			input = {usys};
 		else
 			error('Test case not recognised.');
@@ -33,31 +34,55 @@ for kk = 1 : n_examples
 			pass = true;
 		catch err
 			pass = false;
+			er = err.message;
 		end
 		if pass
-			fprintf('pass\n');
 			obj_th = wcgainlbgrid(usys, info.freq);
 			obj_th = sum(obj_th);
 			obj = sigma(wcsys, info.freq);
 			obj = sum(obj(1, :));
-			fprintf('\t\ttime: %d min\n\t\tobj.: %.2f%%\n', ceil(time / 60), obj / obj_th * 100);
+			obj = obj / obj_th;
+			er = [];			
 		else
-			fprintf(['fail\t', err.message, '\n']);
+			obj = [];
+			time = [];
+		end
+		resk.(cnames{tc}).pass = pass;
+		resk.(cnames{tc}).obj = obj;
+		resk.(cnames{tc}).time = time;
+		resk.(cnames{tc}).er = er;
+	end
+	res{kk} = resk;
+	fprintf('\b|\n');
+end
+warning on;
+
+% write report into file
+file_id = fopen(report_filename, 'w');
+for kk = 1 : n_examples
+	fprintf(file_id, '%d\t', kk);
+	resk = res{kk};
+	tcn = fieldnames(resk);
+	for tc = 1 : n_tc
+		resktc = resk.(tcn{tc});
+		if tc > 1
+			fprintf(file_id, '\t');
+		end
+		fprintf(file_id, '%s freqs.\t', tcn{tc});
+		if resktc.pass
+			fprintf(file_id, 'pass\n');
+			fprintf(file_id, '\t\ttime: %d min\n\t\tobj.: %.2f%%\n', ceil(resktc.time / 60),...
+				resktc.obj * 100);
+		else
+			fprintf(file_id, ['fail\t', resktc.er, '\n']);
 		end
 	end
 end
-diary('off');
-warning on;
-
-% remove warnings form report
-report = fileread('test_result.txt');
-no_backspaces = regexp(report, '\b', 'split');
-report = strjoin(no_backspaces, '');
-no_warnings = regexp(report, '\[[^\]]+\]', 'split');
-report = strjoin(no_warnings, '');
-no_empty_lines = regexp(report, ' \n', 'split');
-report = strjoin(no_empty_lines, '');
-
-% write report into file
-file_id = fopen('test_result.txt', 'w');
-fprintf(file_id, report);
+closeflag = fclose(file_id);
+if closeflag == 0
+	fprintf('Report written to %s.\n', report_filename);
+elseif closeflag == -1
+	error('Unable to close file %s.', report_filename);
+else
+	error('An uncexpected even ocurred when trying to close file %s.', report_filename);
+end
