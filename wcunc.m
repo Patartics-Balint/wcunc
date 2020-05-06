@@ -103,33 +103,40 @@ function freq = pick_freq_grid(susys, info)
 	freqs = [0, logspace(-6, 6, 150)]';
 	if info.uscale == 1
 		wcg = wcgain(susys);
-		freqs = unique([wcg.CriticalFrequency; freqs]);
-	else
+		if isfinite(wcg.CriticalFrequency)
+			freqs = unique([wcg.CriticalFrequency; freqs]);
+		end
+	end
+	if info.uscale < 1
 		[~, ~, robinfo] = robstab(susys, freqs);
 		freqs(robinfo.Bounds(:, 1) <= 1) = [];	
 	end
 	wcglb = wcgainlbgrid(susys, freqs);
+	sig = sigma(susys.NominalValue, freqs);
+	sig = sig(1, :);
+	sig = reshape(sig, [numel(sig), 1]);
+	freqs = [-flip(freqs); freqs];
+	wcglb = [flip(wcglb); wcglb];
+	sig = [flip(sig); sig];
+	[freqs, finds] = unique(freqs);
+	wcglb = wcglb(finds);
+	sig = sig(finds);
+	dif = wcglb - sig;
 	if info.uscale == 1
 		[~, maxind] = max(wcglb);
 		freq = freqs(maxind);
+		[~, maxind] = max(dif);
+		freq = [freq; freqs(maxind)];
 	else
 		freq = [];
 	end
-	range = max(wcglb) - min(wcglb);
+	range = max(dif) - min(dif);
 	if info.uscale < 1
 		range = min([range, 100]);
 	end
-	[pks, pfreq] = findpeaks(wcglb, freqs, 'Threshold', 0.01 * range);
+	[pks, pfreq] = findpeaks(dif, freqs, 'Threshold', 0.01 * range);
 	if isempty(pfreq)
-		[pks, pfreq] = findpeaks(wcglb, freqs, 'NPeaks', 1);
-	end
-	if isempty(pfreq)
-		warning('No peaks found in the worst-case gain lower bound.');
-	end
-	if ~ismember(0, pfreq) && ismember(0, freqs)
-		% add zero
-		pks = [wcglb(1); pks];
-		pfreq = [freqs(1); pfreq];
+		[pks, pfreq] = findpeaks(dif, freqs, 'NPeaks', 1);
 	end
 	if numel(pks) < 4
 		freq = [freq; pfreq];
@@ -137,7 +144,7 @@ function freq = pick_freq_grid(susys, info)
 		[~, sortinds] = sort(pks, 'descend');
 		freq = [freq; pfreq(sortinds(1 : 4))];
 	end
-	freq = unique(freq);
+	freq = unique(abs(freq));
 end
 
 function check_result(usys, wcu, freq)
