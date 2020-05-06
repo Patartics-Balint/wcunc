@@ -290,6 +290,9 @@ function [freq, info] = process_freq(freq, susys, info)
 	if ~isnumeric(freq)
 		error('The array of frequencies must be a numeric array.');
 	end
+	% replace zero frequency with a small positive number
+	min_freq = 1e-6;
+	freq(freq < min_freq) = min_freq;
 	if numel(freq) ~= numel(unique(freq))
 		freq = unique(freq);
 		warning('Repeated frequencies removed.');
