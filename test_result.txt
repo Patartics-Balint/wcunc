@@ -94,11 +94,15 @@
 	selected freqs.	pass
 		time: 1 min
 		obj.: 76.58%
-17	given freqs.	fail	The interpolant is unstable.
+17	given freqs.	pass
+		time: 1 min
+		obj.: 82.41%
 	selected freqs.	pass
 		time: 1 min
 		obj.: 80.36%
-18	given freqs.	fail	The H-inf norm of the interpolant is greater than 1.
+18	given freqs.	pass
+		time: 1 min
+		obj.: 68.90%
 	selected freqs.	pass
 		time: 1 min
 		obj.: 53.17%
@@ -116,7 +120,7 @@
 		time: 5 min
 		obj.: 94.22%
 	selected freqs.	pass
-		time: 4 min
+		time: 3 min
 		obj.: 99.99%
 23	given freqs.	fail	When specifying a frequency vector W, the nominal value of USYS must be stable.
 	selected freqs.	fail	When specifying a frequency vector W, the nominal value of USYS must be stable.
@@ -177,11 +181,15 @@
 33	given freqs.	pass
 		time: 1 min
 		obj.: 100.00%
-	selected freqs.	fail	The interpolant is unstable.
+	selected freqs.	pass
+		time: 1 min
+		obj.: 100.00%
 34	given freqs.	pass
 		time: 1 min
 		obj.: 100.00%
-	selected freqs.	fail	The H-inf norm of the interpolant is greater than 1.
+	selected freqs.	pass
+		time: 1 min
+		obj.: 100.00%
 35	given freqs.	pass
 		time: 1 min
 		obj.: 100.00%
@@ -230,3 +238,9 @@
 	selected freqs.	pass
 		time: 4 min
 		obj.: 100.00%
+43	given freqs.	pass
+		time: 1 min
+		obj.: 52.49%
+	selected freqs.	pass
+		time: 1 min
+		obj.: 52.45%

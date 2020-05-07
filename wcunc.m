@@ -77,7 +77,23 @@ function [wcu, wcsys, info] = wcunc(usys, freq)
 					rvec = r;
 				end
 			end
-			[wcublk, infoblk] = bnpinterp({lvec, rvec}, [freq, cfreq]);
+			factors = 1 - [0, 1e-6, 1e-5, 1e-4, 1e-3, 1e-2, 1e-1, 0.5, 1];
+			I = eye(max([size(lvec, 1), size(rvec, 1)]));
+			for factor = factors
+				try
+					[wcublk, infoblk] = bnpinterp({lvec, rvec}, [freq, cfreq], factor * I);
+					break;
+				catch er
+					if factor == factors(end) ||...
+							~(strcmp(er.message, 'The interpolant is unstable.') ||...
+							strcmp(er.message, 'The H-inf norm of the interpolant is greater than 1.'))
+						rethrow(er);
+					end
+				end
+			end
+			if factor ~= factors(1)
+				warning('The initial fitting attempt was unsuccesful.');
+			end
 			info.(blkname) = infoblk;
 			wcu.(blkname) = wcublk;			
 		end
