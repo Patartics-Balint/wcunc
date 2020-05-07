@@ -331,13 +331,9 @@ function delopt = hypercube_interval_search(n_dim, obj, con, delcon, n_eval_max)
 			end
 		end
 		if all(isnan(objval))
-% 			error('No feasible point found.');
 			distances = diag((dels - delcon)' *(dels - delcon));
 			[~, distsortind] = sort(distances);
 			closestind = distsortind(1);
-% 			if closestind == 1
-% 				closestind = distsortind(2);
-% 			end
 			dels(:, closestind) = delcon;
 			continue;
 		else

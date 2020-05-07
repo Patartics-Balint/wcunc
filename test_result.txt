@@ -47,10 +47,10 @@
 		time: 1 min
 		obj.: 92.97%
 9	given freqs.	pass
-		time: 2 min
+		time: 1 min
 		obj.: 94.40%
 	selected freqs.	pass
-		time: 2 min
+		time: 1 min
 		obj.: 99.92%
 10	given freqs.	pass
 		time: 1 min
@@ -77,26 +77,26 @@
 		time: 1 min
 		obj.: 78.54%
 14	given freqs.	pass
-		time: 2 min
+		time: 1 min
 		obj.: 100.00%
 	selected freqs.	pass
 		time: 2 min
 		obj.: 100.00%
 15	given freqs.	pass
-		time: 2 min
+		time: 1 min
 		obj.: 100.70%
 	selected freqs.	pass
-		time: 2 min
+		time: 1 min
 		obj.: 100.00%
 16	given freqs.	pass
-		time: 2 min
+		time: 1 min
 		obj.: 88.49%
 	selected freqs.	pass
-		time: 2 min
+		time: 1 min
 		obj.: 87.59%
 17	given freqs.	fail	The interpolant is unstable.
 	selected freqs.	pass
-		time: 2 min
+		time: 1 min
 		obj.: 86.92%
 18	given freqs.	fail	The H-inf norm of the interpolant is greater than 1.
 	selected freqs.	pass
@@ -113,7 +113,7 @@
 		time: 1 min
 		obj.: 100.00%
 22	given freqs.	pass
-		time: 9 min
+		time: 5 min
 		obj.: 97.82%
 	selected freqs.	pass
 		time: 4 min
@@ -127,7 +127,7 @@
 		time: 1 min
 		obj.: 100.00%
 25	given freqs.	pass
-		time: 2 min
+		time: 1 min
 		obj.: 100.00%
 	selected freqs.	pass
 		time: 2 min
@@ -145,7 +145,7 @@
 		time: 1 min
 		obj.: 71.53%
 28	given freqs.	pass
-		time: 2 min
+		time: 1 min
 		obj.: 100.00%
 	selected freqs.	pass
 		time: 1 min
@@ -163,7 +163,7 @@
 		time: 1 min
 		obj.: 100.00%
 31	given freqs.	pass
-		time: 3 min
+		time: 2 min
 		obj.: 100.00%
 	selected freqs.	pass
 		time: 1 min
@@ -192,7 +192,7 @@
 		time: 1 min
 		obj.: 18.75%
 	selected freqs.	pass
-		time: 5 min
+		time: 3 min
 		obj.: 92.28%
 37	given freqs.	pass
 		time: 1 min
@@ -204,29 +204,29 @@
 		time: 1 min
 		obj.: 0.00%
 	selected freqs.	pass
-		time: 2 min
+		time: 1 min
 		obj.: 2.94%
 39	given freqs.	pass
 		time: 1 min
 		obj.: 0.00%
 	selected freqs.	pass
-		time: 2 min
+		time: 1 min
 		obj.: 0.00%
 40	given freqs.	pass
 		time: 1 min
 		obj.: 0.00%
 	selected freqs.	pass
-		time: 2 min
+		time: 1 min
 		obj.: 0.00%
 41	given freqs.	pass
 		time: 1 min
 		obj.: 100.00%
 	selected freqs.	pass
-		time: 2 min
+		time: 1 min
 		obj.: 100.00%
 42	given freqs.	pass
-		time: 3 min
+		time: 2 min
 		obj.: 99.96%
 	selected freqs.	pass
-		time: 5 min
+		time: 4 min
 		obj.: 100.00%

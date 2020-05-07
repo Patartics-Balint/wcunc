@@ -9,11 +9,19 @@ cd(test_dir);
 
 n_examples = size(dir('examples/'), 1) - 2;
 n_tc = 2;
-fprintf('Tests running...\n');
-fprintf('%s\n\n', repmat('.', [1, n_examples]));
 
 cnames = {'given', 'selected'};
 res = cell(n_examples, 1);
+warning('off', 'all');
+
+pool = gcp;
+spmd
+	warning('off', 'all');
+end
+
+% print progress bar
+fprintf('Tests running...\n');
+fprintf('%s\n\n', repmat('.', [1, n_examples]));
 
 % run tests
 parfor kk = 1 : n_examples
