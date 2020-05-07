@@ -47,11 +47,7 @@ parfor kk = 1 : n_examples
 			er = err.message;
 		end
 		if pass
-			obj_th = wcgainlbgrid(usys, info.freq);
-			obj_th = sum(obj_th);
-			obj = sigma(wcsys, info.freq);
-			obj = sum(obj(1, :));
-			obj = obj / obj_th;
+			obj = info.obj;
 			er = [];			
 		else
 			obj = [];

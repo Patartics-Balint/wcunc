@@ -29,13 +29,14 @@ function [wcu, wcsys, info] = wcunc(usys, freq)
 			for kk = 1 : numel(rnames)
 				wcu.(rnames{kk}) = wcu_full.(rnames{kk});
 			end
+			info.obj = 1;
 		else
-			[obj, con, delrdestab] = pick_obj_and_con(susys, freq, cfreq, rnames, dnames);
+			[obj, con, delrdestab, objub, objnom] = pick_obj_and_con(susys, freq, cfreq,...
+				rnames, dnames);
 			n_eval_max = 100;
-			delropt = hypercube_interval_search(nr, obj, con, delrdestab, n_eval_max);
-			if all(isnan(delropt))
-				delropt = delrdestab;
-			end
+			[delropt, objopt] = hypercube_interval_search(nr, obj, con, delrdestab, n_eval_max);
+			result = (objopt - objnom) / (objub - objnom);
+			info.obj = result;
 			for kk = 1 : numel(rnames)
 				wcu.(rnames{kk}) = delropt(kk);
 			end
@@ -43,10 +44,11 @@ function [wcu, wcsys, info] = wcunc(usys, freq)
 	end
 	
 	if ~isempty(dnames) % there is dynamic uncertainty in the system
-		if exist('wcu')
+		if exist('wcu', 'var')
 			susys_dyn = usubs(susys, wcu);
 		else
 			susys_dyn = susys;
+			info.obj = 1;
 		end
 		if ~isempty(cfreq) % draw destabilising sample
 			[~, ~, robinfo] = robstab(susys_dyn, cfreq);
@@ -152,20 +154,19 @@ function check_result(usys, wcu, freq)
 	% construction.
 	lb1 = wcgainlbgrid(usys, freq);
 	wcsys = usubs(usys, wcu);
-	resp = freqresp(wcsys, freq);
-	for kk = 1 : size(resp, 3)
-		lb2(kk, 1) = norm(resp(:, :, kk), 2);
-	end
+	lb2 = arrayfun(@(w)(norm(freqresp(wcsys, w), 2)), freq)';
 	tol = 1e-3;
 	den = lb1;
-	den(den < 0.1 * tol) = 1;
+	den(den < 0.1 * tol) = 1; % instead of relative error, calculate absolute error if the
+	% lower bound is close to zero
 	err = abs(lb2 - lb1) ./ den;
 	if max(err) > tol
 		error('The gain of the system does not match the desired lower bound at the specified frequnecies.');
 	end
 end
 
-function [obj, con, delrdestab] = pick_obj_and_con(susys, freq, cfreq, rnames, dnames)
+function [obj, con, delrdestab, objub, objnom] = pick_obj_and_con(susys, freq, cfreq,...
+	rnames, dnames)
 	nr = numel(rnames);
 	if isempty(dnames) % no dynamic uncertainty
 		obj = @(dels)(eval_obj_par(susys, freq, rnames, dels));
@@ -189,6 +190,12 @@ function [obj, con, delrdestab] = pick_obj_and_con(susys, freq, cfreq, rnames, d
 			delrdestab(kk) = destab_unc.(rnames{kk});
 		end
 	end
+	% calculate the upper bound and the nominal value of the objective
+	% function
+	lb = wcgainlbgrid(susys, freq);
+	objub = -sum(lb);
+	sig = arrayfun(@(w)(norm(freqresp(susys.NominalValue, w), 2)), freq);
+	objnom = -sum(sig);
 end
 
 function obj = eval_obj_mixed(susys, freq, rnames, dels)
@@ -305,7 +312,7 @@ function [freq, info] = process_freq(freq, susys, info)
 	info.freq = freq;
 end
 
-function delopt = hypercube_interval_search(n_dim, obj, con, delcon, n_eval_max)
+function [delopt, objopt] = hypercube_interval_search(n_dim, obj, con, delcon, n_eval_max)
 	if nargin < 3
 		con = [];
 	end
@@ -358,6 +365,7 @@ function delopt = hypercube_interval_search(n_dim, obj, con, delcon, n_eval_max)
 		end
 	end
 	delopt = dels(:, minind);
+	objopt = objval_prev(minind);
 end
 
 function combs = allcomb(varargin)
