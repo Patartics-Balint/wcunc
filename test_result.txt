@@ -106,8 +106,12 @@
 	selected freqs.	pass
 		time: 1 min
 		obj.: 53.17%
-19	given freqs.	fail	The "Frequency" property of FRD models must be set to a vector of real and finite frequencies.
-	selected freqs.	fail	The "Frequency" property of FRD models must be set to a vector of real and finite frequencies.
+19	given freqs.	pass
+		time: 1 min
+		obj.: 138.07%
+	selected freqs.	pass
+		time: 4 min
+		obj.: 68.74%
 20	given freqs.	fail	When specifying a frequency vector W, the nominal value of USYS must be stable.
 	selected freqs.	fail	When specifying a frequency vector W, the nominal value of USYS must be stable.
 21	given freqs.	pass
@@ -117,7 +121,7 @@
 		time: 1 min
 		obj.: 100.00%
 22	given freqs.	pass
-		time: 5 min
+		time: 6 min
 		obj.: 94.22%
 	selected freqs.	pass
 		time: 3 min
@@ -134,7 +138,7 @@
 		time: 1 min
 		obj.: 100.00%
 	selected freqs.	pass
-		time: 1 min
+		time: 2 min
 		obj.: 100.00%
 26	given freqs.	pass
 		time: 1 min
@@ -195,7 +199,7 @@
 		obj.: 100.00% (robustly unstable)
 	selected freqs.	pass
 		time: 1 min
-		obj.: 89.40% (robustly unstable)
+		obj.: 89.39% (robustly unstable)
 36	given freqs.	pass
 		time: 1 min
 		obj.: 99.90% (robustly unstable)
@@ -219,13 +223,13 @@
 		obj.: 21.27% (robustly unstable)
 	selected freqs.	pass
 		time: 1 min
-		obj.: 95.26% (robustly unstable)
+		obj.: 67.20% (robustly unstable)
 40	given freqs.	pass
 		time: 1 min
 		obj.: 6.48% (robustly unstable)
 	selected freqs.	pass
 		time: 1 min
-		obj.: 12.63% (robustly unstable)
+		obj.: 95.60% (robustly unstable)
 41	given freqs.	pass
 		time: 1 min
 		obj.: 100.00%

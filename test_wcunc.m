@@ -65,6 +65,15 @@ parfor kk = 1 : n_examples
 end
 warning on;
 
+%print final results
+n_pass = 0;
+n_all = numel(res) * n_tc;
+tcn = fieldnames(res{1});
+for kk = 1 : n_tc
+	n_pass = n_pass + sum(cellfun(@(r)(r.(tcn{kk}).pass), res));
+end
+fprintf('Tests complete. %.2f%% passed.\n', n_pass / n_all * 100);
+
 % write report into file
 file_id = fopen(report_filename, 'w');
 for kk = 1 : n_examples

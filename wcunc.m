@@ -54,7 +54,9 @@ function [wcu, wcsys, info] = wcunc(usys, freq)
 			info.obj = 1;
 		end
 		if ~isempty(cfreq) % draw destabilising sample
-			[~, ~, robinfo] = robstab(susys_dyn, cfreq);
+			robopt = robOptions;
+			robopt.MussvOptions = 'f'; % fast upper bound
+			[~, ~, robinfo] = robstab(susys_dyn, cfreq, robopt);
 		end
 	  % calculate worst-case dynamic uncertainty block by block.
 		[~, wcpert] = wcgainlbgrid(susys_dyn, freq);
@@ -129,8 +131,10 @@ function freq = pick_freq_grid(susys, info)
 		end
 	end
 	if info.uscale < 1
-		[~, ~, robinfo] = robstab(susys, freqs);
-		freqs(robinfo.Bounds(:, 1) <= 1) = [];	
+		robopt = robOptions;
+		robopt.MussvOptions = 'f'; % fast upper bound
+		[~, ~, robinfo] = robstab(susys, freqs, robopt);
+		freqs(robinfo.Bounds(:, 2) <= 1) = [];	
 	end
 	wcglb = wcgainlbgrid(susys, freqs);
 	sig = sigma(susys.NominalValue, freqs);
@@ -196,13 +200,15 @@ function [obj, con, delrdestab, objub, objnom] = pick_obj_and_con(susys, freq, c
 		con = []; % no constraints
 		delrdestab = [];
 	else
+		robopt = robOptions;
+		robopt.MussvOptions = 'f'; % fast upper bound
 		if isempty(dnames) % no dynamic uncertainty
 			con = @(dels)(eval_con_unstab_par(susys, cfreq, rnames, dels));
-			[~, destab_unc] = robstab(susys); % gives the wrong result when called with the critical
+			[~, destab_unc] = robstab(susys, robopt); % gives the wrong result when called with the critical
 			% frequency specified (probably due to a bug)
 		else % mixed uncertainty
 			con = @(dels)(eval_con_unstab_mixed(susys, cfreq, rnames, dels));
-			[~, destab_unc] = robstab(susys, cfreq);
+			[~, destab_unc] = robstab(susys, cfreq, robopt);
 		end
 		delrdestab = zeros(nr, 1);
 		for kk = 1 : nr
@@ -252,8 +258,10 @@ function [c, ceq] = eval_con_unstab_mixed(usys, cfreq, rnames, dels)
 	for kk = 1 : numel(rnames)
 		reals.(rnames{kk}) = dels(kk);
 	end
-	sm = robstab(usubs(usys, reals), cfreq);	
-	c = target_mu - 1 / sm.LowerBound; % mu(cfreq) >= target_mu
+	robopt = robOptions;
+	robopt.MussvOptions = 'f'; % fast upper bound
+	sm = robstab(usubs(usys, reals), cfreq, robopt);	
+	c = target_mu - 1 / sm.UpperBound; % mu(cfreq) >= target_mu
 end
 
 function [c, ceq] = eval_con_unstab_par(usys, cfreq, rnames, dels)
@@ -270,7 +278,7 @@ end
 function [dnames, rnames, nr] = process_system(usys)
 	% check usys
 	if ~isa(usys, 'uss')
-		error('The first input argument must be ''uss''');
+		error('The first input argument must be ''uss''.');
 	end
 	% find uncertainty names
 	unames = fieldnames(usys.Uncertainty);
@@ -295,8 +303,10 @@ end
 
 function [susys, cfreq, info] = scale_for_robust_stability(usys, info)
 	% check robust stability
-	sm = robstab(usys);
-	if sm.LowerBound <= 1 % the system is not robustly stable => scale the unceratinty block
+	robopt = robOptions;
+	robopt.MussvOptions = 'f'; % fast upper bound
+	sm = robstab(usys, robopt);
+	if sm.UpperBound <= 1 % the system is not robustly stable => scale the unceratinty block
 		[M, delta] = lftdata(usys);
 		info.uscale = 1.01 * sm.UpperBound;
 		susys = lft(delta * info.uscale, M);
@@ -326,8 +336,10 @@ function [freq, info] = process_freq(freq, susys, info)
 	freq = reshape(freq, [1, numel(freq)]);
 	freq = sort(freq, 'ascend');
 	% remove the frequency points where mu >= 1 from the set of frequencies
-	[~, ~, rinfo] = robstab(susys, freq);
-	freq(rinfo.Bounds(:, 1) <= 1) = [];
+	robopt = robOptions;
+	robopt.MussvOptions = 'f'; % fast upper bound
+	[~, ~, rinfo] = robstab(susys, freq, robopt);
+	freq(rinfo.Bounds(:, 2) <= 1) = [];
 	info.freq = freq;
 end
 
