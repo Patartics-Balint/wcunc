@@ -1,82 +1,250 @@
 1	given freqs.	pass
-	selected freqs.	fail	The interpolant is unstable.
+		time: 1 min
+		obj.: 100.00%
+	selected freqs.	pass
+		time: 1 min
+		obj.: 100.00%
 2	given freqs.	pass
+		time: 1 min
+		obj.: 100.00%
 	selected freqs.	pass
+		time: 1 min
+		obj.: 100.00%
 3	given freqs.	pass
+		time: 1 min
+		obj.: 100.00%
 	selected freqs.	pass
+		time: 1 min
+		obj.: 100.00%
 4	given freqs.	pass
+		time: 1 min
+		obj.: 100.00%
 	selected freqs.	pass
+		time: 1 min
+		obj.: 100.00%
 5	given freqs.	pass
+		time: 1 min
+		obj.: 100.00%
 	selected freqs.	pass
-6	given freqs.	fail	The interpolant is unstable.
+		time: 1 min
+		obj.: 100.00%
+6	given freqs.	pass
+		time: 1 min
+		obj.: 100.00%
 	selected freqs.	pass
+		time: 1 min
+		obj.: 100.00%
 7	given freqs.	pass
+		time: 1 min
+		obj.: 100.00%
 	selected freqs.	pass
+		time: 1 min
+		obj.: 100.00%
 8	given freqs.	pass
-	selected freqs.	fail	Expected X to be finite.
+		time: 1 min
+		obj.: 83.38%
+	selected freqs.	pass
+		time: 1 min
+		obj.: 69.93%
 9	given freqs.	pass
+		time: 1 min
+		obj.: 77.77%
 	selected freqs.	pass
+		time: 1 min
+		obj.: 99.79%
 10	given freqs.	pass
+		time: 1 min
+		obj.: 80.67%
 	selected freqs.	pass
+		time: 1 min
+		obj.: 80.23%
 11	given freqs.	pass
+		time: 1 min
+		obj.: 90.10%
 	selected freqs.	pass
+		time: 1 min
+		obj.: 100.00%
 12	given freqs.	pass
-	selected freqs.	fail	Expected X to be finite.
+		time: 1 min
+		obj.: 93.74%
+	selected freqs.	pass
+		time: 1 min
+		obj.: 90.69%
 13	given freqs.	pass
+		time: 1 min
+		obj.: 97.10%
 	selected freqs.	pass
+		time: 1 min
+		obj.: 58.23%
 14	given freqs.	pass
+		time: 1 min
+		obj.: 100.00%
 	selected freqs.	pass
+		time: 2 min
+		obj.: 100.00%
 15	given freqs.	pass
+		time: 1 min
+		obj.: 104.94%
 	selected freqs.	pass
+		time: 1 min
+		obj.: 100.00%
 16	given freqs.	pass
+		time: 2 min
+		obj.: 67.90%
 	selected freqs.	pass
-17	given freqs.	fail	The H-inf norm of the interpolant is greater than 1.
+		time: 2 min
+		obj.: 76.58%
+17	given freqs.	pass
+		time: 1 min
+		obj.: 82.41%
 	selected freqs.	pass
-18	given freqs.	fail	The H-inf norm of the interpolant is greater than 1.
+		time: 1 min
+		obj.: 80.36%
+18	given freqs.	pass
+		time: 1 min
+		obj.: 68.90%
 	selected freqs.	pass
-19	given freqs.	fail	The "Frequency" property of FRD models must be set to a vector of real and finite frequencies.
-	selected freqs.	fail	Expected Y to be nonempty.
+		time: 1 min
+		obj.: 53.17%
+19	given freqs.	pass
+		time: 1 min
+		obj.: 138.07%
+	selected freqs.	pass
+		time: 4 min
+		obj.: 68.74%
 20	given freqs.	fail	When specifying a frequency vector W, the nominal value of USYS must be stable.
 	selected freqs.	fail	When specifying a frequency vector W, the nominal value of USYS must be stable.
 21	given freqs.	pass
+		time: 1 min
+		obj.: 100.00%
 	selected freqs.	pass
+		time: 1 min
+		obj.: 100.00%
 22	given freqs.	pass
+		time: 6 min
+		obj.: 94.22%
 	selected freqs.	pass
+		time: 3 min
+		obj.: 99.99%
 23	given freqs.	fail	When specifying a frequency vector W, the nominal value of USYS must be stable.
 	selected freqs.	fail	When specifying a frequency vector W, the nominal value of USYS must be stable.
 24	given freqs.	pass
+		time: 1 min
+		obj.: 99.99%
 	selected freqs.	pass
+		time: 1 min
+		obj.: 100.01%
 25	given freqs.	pass
+		time: 1 min
+		obj.: 100.00%
 	selected freqs.	pass
+		time: 2 min
+		obj.: 100.00%
 26	given freqs.	pass
-	selected freqs.	fail	Expected X to be finite.
+		time: 1 min
+		obj.: 99.80%
+	selected freqs.	pass
+		time: 1 min
+		obj.: 100.00%
 27	given freqs.	pass
+		time: 1 min
+		obj.: 79.03%
 	selected freqs.	pass
+		time: 1 min
+		obj.: 40.15%
 28	given freqs.	pass
-	selected freqs.	fail	The H-inf norm of the interpolant is greater than 1.
+		time: 1 min
+		obj.: 100.00%
+	selected freqs.	pass
+		time: 1 min
+		obj.: 100.00%
 29	given freqs.	pass
-	selected freqs.	fail	The interpolant is unstable.
+		time: 1 min
+		obj.: 71.14%
+	selected freqs.	pass
+		time: 1 min
+		obj.: 81.62%
 30	given freqs.	pass
+		time: 1 min
+		obj.: 81.37%
 	selected freqs.	pass
+		time: 1 min
+		obj.: 100.00%
 31	given freqs.	pass
-	selected freqs.	fail	The fit is innacurate.
+		time: 2 min
+		obj.: 100.00%
+	selected freqs.	pass
+		time: 1 min
+		obj.: 100.00%
 32	given freqs.	pass
+		time: 1 min
+		obj.: 100.00%
 	selected freqs.	pass
+		time: 1 min
+		obj.: 100.00%
 33	given freqs.	pass
+		time: 1 min
+		obj.: 100.00%
 	selected freqs.	pass
+		time: 1 min
+		obj.: 100.00%
 34	given freqs.	pass
+		time: 1 min
+		obj.: 100.00%
 	selected freqs.	pass
+		time: 1 min
+		obj.: 100.00%
 35	given freqs.	pass
+		time: 1 min
+		obj.: 100.00% (robustly unstable)
 	selected freqs.	pass
+		time: 1 min
+		obj.: 89.39% (robustly unstable)
 36	given freqs.	pass
+		time: 1 min
+		obj.: 99.90% (robustly unstable)
 	selected freqs.	pass
+		time: 3 min
+		obj.: 15.38% (robustly unstable)
 37	given freqs.	pass
+		time: 1 min
+		obj.: 97.72% (robustly unstable)
 	selected freqs.	pass
+		time: 1 min
+		obj.: 100.00% (robustly unstable)
 38	given freqs.	pass
+		time: 1 min
+		obj.: 20.40% (robustly unstable)
 	selected freqs.	pass
+		time: 1 min
+		obj.: 5.09% (robustly unstable)
 39	given freqs.	pass
+		time: 1 min
+		obj.: 21.27% (robustly unstable)
 	selected freqs.	pass
+		time: 1 min
+		obj.: 67.20% (robustly unstable)
 40	given freqs.	pass
+		time: 1 min
+		obj.: 6.48% (robustly unstable)
 	selected freqs.	pass
+		time: 1 min
+		obj.: 95.60% (robustly unstable)
 41	given freqs.	pass
+		time: 1 min
+		obj.: 100.00%
 	selected freqs.	pass
+		time: 1 min
+		obj.: 100.00%
+42	given freqs.	pass
+		time: 2 min
+		obj.: 99.90%
+	selected freqs.	pass
+		time: 4 min
+		obj.: 100.00%
+43	given freqs.	pass
+		time: 1 min
+		obj.: 52.49%
+	selected freqs.	pass
+		time: 1 min
+		obj.: 52.45%

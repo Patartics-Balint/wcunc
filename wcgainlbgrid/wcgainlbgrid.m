@@ -125,39 +125,8 @@ function WCP = getWorstCasePerturbation(B,muB,PertData,freq)
 			 else
 					prt = nprt(:,:,ct);
 			 end
-			 if DynamicFLag
-					% Compute complex perturbation from worst-case perturbation at a
-					% given frequency (for dynamic uncertainty like ultidyn)
-					prt = getWorstCaseComplexPerturbation(BlockData,prt,freq(ct));
-			 elseif iscell(prt)
-					% Reduce to numeric value for static blocks
-					prt = prt{1}*prt{2};
-			 end
 			 % Un-normalize perturbation
 			 WCP(ct).(BlockName) = evalInverseBlockTransform(Bk,prt);
 		end
-	end
-end
-
-function WCP = getWorstCaseComplexPerturbation(blk,nprt,Freq)
-	% Constructs dynamic perturbation
-	% Called by rsEngine and a local function in lftdataFRD/WCGARRAYMAX.
-	% The normalized perturbation NPRT is either a 1-by-2 cell containing 
-	% a column vector and a row vector, or a 2D double array.
-	if iscell(nprt)
-		wlvec = nprt{1};
-		wrvec = nprt{2};
-	else
-		[u,s,v] = svd(nprt);
-		smax = sqrt(s(1,1));
-		wlvec = u(:,1)*smax;
-		wrvec = smax*v(:,1)';
-	end
-	WCP = wlvec * wrvec;
-	if Freq == 0 && isa(blk, 'ultidyn')
-		if sum(abs(real(WCP(:)))) / sum(abs(imag(WCP(:)))) < 1e3
-			warning('The complex perturbation has singnificant imaginary part at zero frequency.');
-		end
-		WCP = real(WCP);
 	end
 end
