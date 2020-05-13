@@ -33,10 +33,13 @@ function [wcu, wcsys, info] = wcunc(usys, freq)
 		else
 			[obj, con, delrdestab, objub, objnom] = pick_obj_and_con(susys, freq, cfreq,...
 				rnames, dnames);
+			progress = @(objopt)((objopt - objnom) / (objub - objnom));
 			n_eval_max = 100;
 			[delropt, objopt] = hypercube_interval_search(nr, obj, con, delrdestab, n_eval_max);
-			result = (objopt - objnom) / (objub - objnom);
-			info.obj = result;
+			if progress(objopt) < 0.95
+				[delropt, objopt] = gradient_descent(obj, con, delropt, objopt, n_eval_max);
+			end
+			info.obj = progress(objopt);
 			for kk = 1 : numel(rnames)
 				wcu.(rnames{kk}) = delropt(kk);
 			end
@@ -116,7 +119,7 @@ function [wcu, wcsys, info] = wcunc(usys, freq)
 	% substitute worst-case uncertainty
 	wcsys = usubs(usys, wcu);
 end
-	
+
 function freq = pick_freq_grid(susys, info)	
 	freqs = [0, logspace(-6, 6, 150)]';
 	if info.uscale == 1
@@ -390,4 +393,18 @@ function combs = allcomb(varargin)
 	[ndgrid_output{:}] = ndgrid(varargin{:});
 	combs = cellfun(@(m)(reshape(m, [1, numel(m)])), ndgrid_output, 'UniformOutput', false);
 	combs = cell2mat(combs);
+end
+
+function [delropt, objopt] = gradient_descent(obj, con, delrinit, objinit, n_eval_max)
+	fminopt = optimset('fmincon');
+	fminopt.Display = 'off';
+% 	fminopt.MaxFunEvals = n_eval_max;
+	fminopt.Algorithm = 'interior-point';
+% 	fminopt.Algorithm = 'sqp';
+	[delropt, objopt, exitflag] = fmincon(obj, delrinit, [], [], [], [],...
+		-ones(size(delrinit)), ones(size(delrinit)), con, fminopt);
+	if objopt > objinit || exitflag == 2
+		delropt = delrinit;
+		objopt = objinit;
+	end
 end

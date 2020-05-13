@@ -89,10 +89,10 @@
 		time: 1 min
 		obj.: 100.00%
 16	given freqs.	pass
-		time: 1 min
+		time: 2 min
 		obj.: 67.90%
 	selected freqs.	pass
-		time: 1 min
+		time: 2 min
 		obj.: 76.58%
 17	given freqs.	pass
 		time: 1 min
@@ -134,7 +134,7 @@
 		time: 1 min
 		obj.: 100.00%
 	selected freqs.	pass
-		time: 2 min
+		time: 1 min
 		obj.: 100.00%
 26	given freqs.	pass
 		time: 1 min
@@ -192,40 +192,40 @@
 		obj.: 100.00%
 35	given freqs.	pass
 		time: 1 min
-		obj.: 100.00%
+		obj.: 100.00% (robustly unstable)
 	selected freqs.	pass
 		time: 1 min
-		obj.: 89.40%
+		obj.: 89.40% (robustly unstable)
 36	given freqs.	pass
 		time: 1 min
-		obj.: 15.31%
+		obj.: 99.90% (robustly unstable)
 	selected freqs.	pass
 		time: 3 min
-		obj.: -2.30%
+		obj.: 15.38% (robustly unstable)
 37	given freqs.	pass
 		time: 1 min
-		obj.: 97.72%
+		obj.: 97.72% (robustly unstable)
 	selected freqs.	pass
 		time: 1 min
-		obj.: 100.00%
+		obj.: 100.00% (robustly unstable)
 38	given freqs.	pass
 		time: 1 min
-		obj.: 20.20%
+		obj.: 20.40% (robustly unstable)
 	selected freqs.	pass
 		time: 1 min
-		obj.: 5.09%
+		obj.: 5.09% (robustly unstable)
 39	given freqs.	pass
 		time: 1 min
-		obj.: 21.27%
+		obj.: 21.27% (robustly unstable)
 	selected freqs.	pass
 		time: 1 min
-		obj.: 95.26%
+		obj.: 95.26% (robustly unstable)
 40	given freqs.	pass
 		time: 1 min
-		obj.: 6.48%
+		obj.: 6.48% (robustly unstable)
 	selected freqs.	pass
 		time: 1 min
-		obj.: 12.63%
+		obj.: 12.63% (robustly unstable)
 41	given freqs.	pass
 		time: 1 min
 		obj.: 100.00%

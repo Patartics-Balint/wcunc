@@ -48,15 +48,18 @@ parfor kk = 1 : n_examples
 		end
 		if pass
 			obj = info.obj;
-			er = [];			
+			er = [];
+			stable = isempty(info.cfreq);
 		else
 			obj = [];
 			time = [];
+			stable = [];
 		end
 		res{kk}.(cnames{tc}).pass = pass;
 		res{kk}.(cnames{tc}).obj = obj;
 		res{kk}.(cnames{tc}).time = time;
 		res{kk}.(cnames{tc}).er = er;
+		res{kk}.(cnames{tc}).stable = stable;
 	end
 	fprintf('\b|\n');
 end
@@ -76,8 +79,12 @@ for kk = 1 : n_examples
 		fprintf(file_id, '%s freqs.\t', tcn{tc});
 		if resktc.pass
 			fprintf(file_id, 'pass\n');
-			fprintf(file_id, '\t\ttime: %d min\n\t\tobj.: %.2f%%\n', ceil(resktc.time / 60),...
+			fprintf(file_id, '\t\ttime: %d min\n\t\tobj.: %.2f%%', ceil(resktc.time / 60),...
 				resktc.obj * 100);
+			if ~resktc.stable
+				fprintf(file_id, ' (robustly unstable)');
+			end
+			fprintf(file_id, '\n');			
 		else
 			fprintf(file_id, ['fail\t', resktc.er, '\n']);
 		end
