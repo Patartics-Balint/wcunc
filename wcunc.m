@@ -1,5 +1,5 @@
 function [wcu, wcsys, info] = wcunc(usys, freq)
-	% Calculate worst-case uncertainty which maximises the gain of an
+	% WCUNC Calculate worst-case uncertainty which maximises the gain of an
 	% uncertain system at specified frequnecies.
 	%
 	% Usage
