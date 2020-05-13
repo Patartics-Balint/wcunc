@@ -4,7 +4,9 @@
 	selected freqs.	pass
 		time: 1 min
 		obj.: 100.00%
-2	given freqs.	fail	The H-inf norm of the interpolant is greater than 1.
+2	given freqs.	pass
+		time: 1 min
+		obj.: 100.00%
 	selected freqs.	pass
 		time: 1 min
 		obj.: 100.00%
@@ -25,7 +27,7 @@
 		obj.: 100.00%
 	selected freqs.	pass
 		time: 1 min
-		obj.: 100.06%
+		obj.: 100.00%
 6	given freqs.	pass
 		time: 1 min
 		obj.: 100.00%
@@ -40,40 +42,40 @@
 		obj.: 100.00%
 8	given freqs.	pass
 		time: 1 min
-		obj.: 96.65%
+		obj.: 83.38%
 	selected freqs.	pass
 		time: 1 min
-		obj.: 92.97%
+		obj.: 69.93%
 9	given freqs.	pass
 		time: 1 min
-		obj.: 94.40%
+		obj.: 77.77%
 	selected freqs.	pass
 		time: 1 min
-		obj.: 99.92%
+		obj.: 99.79%
 10	given freqs.	pass
 		time: 1 min
-		obj.: 99.97%
+		obj.: 80.67%
 	selected freqs.	pass
 		time: 1 min
-		obj.: 95.58%
+		obj.: 80.23%
 11	given freqs.	pass
 		time: 1 min
-		obj.: 100.00%
+		obj.: 90.10%
 	selected freqs.	pass
 		time: 1 min
 		obj.: 100.00%
 12	given freqs.	pass
 		time: 1 min
-		obj.: 96.22%
+		obj.: 93.74%
 	selected freqs.	pass
 		time: 1 min
-		obj.: 94.03%
+		obj.: 90.69%
 13	given freqs.	pass
 		time: 1 min
-		obj.: 98.82%
+		obj.: 97.10%
 	selected freqs.	pass
 		time: 1 min
-		obj.: 78.54%
+		obj.: 58.23%
 14	given freqs.	pass
 		time: 1 min
 		obj.: 100.00%
@@ -82,26 +84,34 @@
 		obj.: 100.00%
 15	given freqs.	pass
 		time: 1 min
-		obj.: 100.70%
+		obj.: 104.94%
 	selected freqs.	pass
 		time: 1 min
 		obj.: 100.00%
 16	given freqs.	pass
+		time: 2 min
+		obj.: 67.90%
+	selected freqs.	pass
+		time: 2 min
+		obj.: 76.58%
+17	given freqs.	pass
 		time: 1 min
-		obj.: 87.83%
+		obj.: 82.41%
 	selected freqs.	pass
 		time: 1 min
-		obj.: 87.59%
-17	given freqs.	fail	The H-inf norm of the interpolant is greater than 1.
+		obj.: 80.36%
+18	given freqs.	pass
+		time: 1 min
+		obj.: 68.90%
 	selected freqs.	pass
 		time: 1 min
-		obj.: 86.92%
-18	given freqs.	fail	The H-inf norm of the interpolant is greater than 1.
-	selected freqs.	pass
+		obj.: 53.17%
+19	given freqs.	pass
 		time: 1 min
-		obj.: 72.29%
-19	given freqs.	fail	The "Frequency" property of FRD models must be set to a vector of real and finite frequencies.
-	selected freqs.	fail	The "Frequency" property of FRD models must be set to a vector of real and finite frequencies.
+		obj.: 138.07%
+	selected freqs.	pass
+		time: 4 min
+		obj.: 68.74%
 20	given freqs.	fail	When specifying a frequency vector W, the nominal value of USYS must be stable.
 	selected freqs.	fail	When specifying a frequency vector W, the nominal value of USYS must be stable.
 21	given freqs.	pass
@@ -111,35 +121,37 @@
 		time: 1 min
 		obj.: 100.00%
 22	given freqs.	pass
-		time: 5 min
-		obj.: 97.82%
+		time: 6 min
+		obj.: 94.22%
 	selected freqs.	pass
-		time: 4 min
+		time: 3 min
 		obj.: 99.99%
 23	given freqs.	fail	When specifying a frequency vector W, the nominal value of USYS must be stable.
 	selected freqs.	fail	When specifying a frequency vector W, the nominal value of USYS must be stable.
 24	given freqs.	pass
 		time: 1 min
-		obj.: 100.00%
+		obj.: 99.99%
 	selected freqs.	pass
 		time: 1 min
-		obj.: 100.00%
+		obj.: 100.01%
 25	given freqs.	pass
 		time: 1 min
 		obj.: 100.00%
-	selected freqs.	fail	The interpolant is unstable.
+	selected freqs.	pass
+		time: 2 min
+		obj.: 100.00%
 26	given freqs.	pass
 		time: 1 min
-		obj.: 99.99%
+		obj.: 99.80%
 	selected freqs.	pass
 		time: 1 min
 		obj.: 100.00%
 27	given freqs.	pass
 		time: 1 min
-		obj.: 91.56%
+		obj.: 79.03%
 	selected freqs.	pass
 		time: 1 min
-		obj.: 71.53%
+		obj.: 40.15%
 28	given freqs.	pass
 		time: 1 min
 		obj.: 100.00%
@@ -148,13 +160,13 @@
 		obj.: 100.00%
 29	given freqs.	pass
 		time: 1 min
-		obj.: 92.50%
+		obj.: 71.14%
 	selected freqs.	pass
 		time: 1 min
-		obj.: 90.24%
+		obj.: 81.62%
 30	given freqs.	pass
 		time: 1 min
-		obj.: 92.10%
+		obj.: 81.37%
 	selected freqs.	pass
 		time: 1 min
 		obj.: 100.00%
@@ -173,47 +185,51 @@
 33	given freqs.	pass
 		time: 1 min
 		obj.: 100.00%
-	selected freqs.	fail	The H-inf norm of the interpolant is greater than 1.
-34	given freqs.	fail	The H-inf norm of the interpolant is greater than 1.
+	selected freqs.	pass
+		time: 1 min
+		obj.: 100.00%
+34	given freqs.	pass
+		time: 1 min
+		obj.: 100.00%
 	selected freqs.	pass
 		time: 1 min
 		obj.: 100.00%
 35	given freqs.	pass
 		time: 1 min
-		obj.: 0.00%
+		obj.: 100.00% (robustly unstable)
 	selected freqs.	pass
 		time: 1 min
-		obj.: 60.88%
+		obj.: 89.39% (robustly unstable)
 36	given freqs.	pass
 		time: 1 min
-		obj.: 18.75%
+		obj.: 99.90% (robustly unstable)
 	selected freqs.	pass
 		time: 3 min
-		obj.: 92.28%
+		obj.: 15.38% (robustly unstable)
 37	given freqs.	pass
 		time: 1 min
-		obj.: 0.00%
+		obj.: 97.72% (robustly unstable)
 	selected freqs.	pass
 		time: 1 min
-		obj.: 0.00%
+		obj.: 100.00% (robustly unstable)
 38	given freqs.	pass
 		time: 1 min
-		obj.: 0.00%
+		obj.: 20.40% (robustly unstable)
 	selected freqs.	pass
 		time: 1 min
-		obj.: 2.94%
+		obj.: 5.09% (robustly unstable)
 39	given freqs.	pass
 		time: 1 min
-		obj.: 0.00%
+		obj.: 21.27% (robustly unstable)
 	selected freqs.	pass
 		time: 1 min
-		obj.: 0.00%
+		obj.: 67.20% (robustly unstable)
 40	given freqs.	pass
 		time: 1 min
-		obj.: 0.00%
+		obj.: 6.48% (robustly unstable)
 	selected freqs.	pass
 		time: 1 min
-		obj.: 0.00%
+		obj.: 95.60% (robustly unstable)
 41	given freqs.	pass
 		time: 1 min
 		obj.: 100.00%
@@ -222,7 +238,13 @@
 		obj.: 100.00%
 42	given freqs.	pass
 		time: 2 min
-		obj.: 99.96%
+		obj.: 99.90%
 	selected freqs.	pass
-		time: 5 min
+		time: 4 min
 		obj.: 100.00%
+43	given freqs.	pass
+		time: 1 min
+		obj.: 52.49%
+	selected freqs.	pass
+		time: 1 min
+		obj.: 52.45%

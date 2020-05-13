@@ -29,13 +29,17 @@ function [wcu, wcsys, info] = wcunc(usys, freq)
 			for kk = 1 : numel(rnames)
 				wcu.(rnames{kk}) = wcu_full.(rnames{kk});
 			end
+			info.obj = 1;
 		else
-			[obj, con, delrdestab] = pick_obj_and_con(susys, freq, cfreq, rnames, dnames);
+			[obj, con, delrdestab, objub, objnom] = pick_obj_and_con(susys, freq, cfreq,...
+				rnames, dnames);
+			progress = @(objopt)((objopt - objnom) / (objub - objnom));
 			n_eval_max = 100;
-			delropt = hypercube_interval_search(nr, obj, con, delrdestab, n_eval_max);
-			if all(isnan(delropt))
-				delropt = delrdestab;
+			[delropt, objopt] = hypercube_interval_search(nr, obj, con, delrdestab, n_eval_max);
+			if progress(objopt) < 0.95
+				[delropt, objopt] = gradient_descent(obj, con, delropt, objopt, n_eval_max);
 			end
+			info.obj = progress(objopt);
 			for kk = 1 : numel(rnames)
 				wcu.(rnames{kk}) = delropt(kk);
 			end
@@ -43,13 +47,16 @@ function [wcu, wcsys, info] = wcunc(usys, freq)
 	end
 	
 	if ~isempty(dnames) % there is dynamic uncertainty in the system
-		if exist('wcu')
+		if exist('wcu', 'var')
 			susys_dyn = usubs(susys, wcu);
 		else
 			susys_dyn = susys;
+			info.obj = 1;
 		end
 		if ~isempty(cfreq) % draw destabilising sample
-			[~, ~, robinfo] = robstab(susys_dyn, cfreq);
+			robopt = robOptions;
+			robopt.MussvOptions = 'f'; % fast upper bound
+			[~, ~, robinfo] = robstab(susys_dyn, cfreq, robopt);
 		end
 	  % calculate worst-case dynamic uncertainty block by block.
 		[~, wcpert] = wcgainlbgrid(susys_dyn, freq);
@@ -75,7 +82,23 @@ function [wcu, wcsys, info] = wcunc(usys, freq)
 					rvec = r;
 				end
 			end
-			[wcublk, infoblk] = bnpinterp({lvec, rvec}, [freq, cfreq]);
+			factors = 1 - [0, 1e-6, 1e-5, 1e-4, 1e-3, 1e-2, 1e-1, 0.5, 1];
+			I = eye(max([size(lvec, 1), size(rvec, 1)]));
+			for factor = factors
+				try
+					[wcublk, infoblk] = bnpinterp({lvec, rvec}, [freq, cfreq], factor * I);
+					break;
+				catch er
+					if factor == factors(end) ||...
+							~(strcmp(er.message, 'The interpolant is unstable.') ||...
+							strcmp(er.message, 'The H-inf norm of the interpolant is greater than 1.'))
+						rethrow(er);
+					end
+				end
+			end
+			if factor ~= factors(1)
+				warning('The initial fitting attempt was unsuccesful.');
+			end
 			info.(blkname) = infoblk;
 			wcu.(blkname) = wcublk;			
 		end
@@ -98,7 +121,7 @@ function [wcu, wcsys, info] = wcunc(usys, freq)
 	% substitute worst-case uncertainty
 	wcsys = usubs(usys, wcu);
 end
-	
+
 function freq = pick_freq_grid(susys, info)	
 	freqs = [0, logspace(-6, 6, 150)]';
 	if info.uscale == 1
@@ -108,8 +131,10 @@ function freq = pick_freq_grid(susys, info)
 		end
 	end
 	if info.uscale < 1
-		[~, ~, robinfo] = robstab(susys, freqs);
-		freqs(robinfo.Bounds(:, 1) <= 1) = [];	
+		robopt = robOptions;
+		robopt.MussvOptions = 'f'; % fast upper bound
+		[~, ~, robinfo] = robstab(susys, freqs, robopt);
+		freqs(robinfo.Bounds(:, 2) <= 1) = [];	
 	end
 	wcglb = wcgainlbgrid(susys, freqs);
 	sig = sigma(susys.NominalValue, freqs);
@@ -152,20 +177,19 @@ function check_result(usys, wcu, freq)
 	% construction.
 	lb1 = wcgainlbgrid(usys, freq);
 	wcsys = usubs(usys, wcu);
-	resp = freqresp(wcsys, freq);
-	for kk = 1 : size(resp, 3)
-		lb2(kk, 1) = norm(resp(:, :, kk), 2);
-	end
+	lb2 = arrayfun(@(w)(norm(freqresp(wcsys, w), 2)), freq)';
 	tol = 1e-3;
 	den = lb1;
-	den(den < 0.1 * tol) = 1;
+	den(den < 0.1 * tol) = 1; % instead of relative error, calculate absolute error if the
+	% lower bound is close to zero
 	err = abs(lb2 - lb1) ./ den;
 	if max(err) > tol
 		error('The gain of the system does not match the desired lower bound at the specified frequnecies.');
 	end
 end
 
-function [obj, con, delrdestab] = pick_obj_and_con(susys, freq, cfreq, rnames, dnames)
+function [obj, con, delrdestab, objub, objnom] = pick_obj_and_con(susys, freq, cfreq,...
+	rnames, dnames)
 	nr = numel(rnames);
 	if isempty(dnames) % no dynamic uncertainty
 		obj = @(dels)(eval_obj_par(susys, freq, rnames, dels));
@@ -176,19 +200,27 @@ function [obj, con, delrdestab] = pick_obj_and_con(susys, freq, cfreq, rnames, d
 		con = []; % no constraints
 		delrdestab = [];
 	else
+		robopt = robOptions;
+		robopt.MussvOptions = 'f'; % fast upper bound
 		if isempty(dnames) % no dynamic uncertainty
 			con = @(dels)(eval_con_unstab_par(susys, cfreq, rnames, dels));
-			[~, destab_unc] = robstab(susys); % gives the wrong result when called with the critical
+			[~, destab_unc] = robstab(susys, robopt); % gives the wrong result when called with the critical
 			% frequency specified (probably due to a bug)
 		else % mixed uncertainty
 			con = @(dels)(eval_con_unstab_mixed(susys, cfreq, rnames, dels));
-			[~, destab_unc] = robstab(susys, cfreq);
+			[~, destab_unc] = robstab(susys, cfreq, robopt);
 		end
 		delrdestab = zeros(nr, 1);
 		for kk = 1 : nr
 			delrdestab(kk) = destab_unc.(rnames{kk});
 		end
 	end
+	% calculate the upper bound and the nominal value of the objective
+	% function
+	lb = wcgainlbgrid(susys, freq);
+	objub = -sum(lb);
+	sig = arrayfun(@(w)(norm(freqresp(susys.NominalValue, w), 2)), freq);
+	objnom = -sum(sig);
 end
 
 function obj = eval_obj_mixed(susys, freq, rnames, dels)
@@ -226,8 +258,10 @@ function [c, ceq] = eval_con_unstab_mixed(usys, cfreq, rnames, dels)
 	for kk = 1 : numel(rnames)
 		reals.(rnames{kk}) = dels(kk);
 	end
-	sm = robstab(usubs(usys, reals), cfreq);	
-	c = target_mu - 1 / sm.LowerBound; % mu(cfreq) >= target_mu
+	robopt = robOptions;
+	robopt.MussvOptions = 'f'; % fast upper bound
+	sm = robstab(usubs(usys, reals), cfreq, robopt);	
+	c = target_mu - 1 / sm.UpperBound; % mu(cfreq) >= target_mu
 end
 
 function [c, ceq] = eval_con_unstab_par(usys, cfreq, rnames, dels)
@@ -244,7 +278,7 @@ end
 function [dnames, rnames, nr] = process_system(usys)
 	% check usys
 	if ~isa(usys, 'uss')
-		error('The first input argument must be ''uss''');
+		error('The first input argument must be ''uss''.');
 	end
 	% find uncertainty names
 	unames = fieldnames(usys.Uncertainty);
@@ -269,8 +303,10 @@ end
 
 function [susys, cfreq, info] = scale_for_robust_stability(usys, info)
 	% check robust stability
-	sm = robstab(usys);
-	if sm.LowerBound <= 1 % the system is not robustly stable => scale the unceratinty block
+	robopt = robOptions;
+	robopt.MussvOptions = 'f'; % fast upper bound
+	sm = robstab(usys, robopt);
+	if sm.UpperBound <= 1 % the system is not robustly stable => scale the unceratinty block
 		[M, delta] = lftdata(usys);
 		info.uscale = 1.01 * sm.UpperBound;
 		susys = lft(delta * info.uscale, M);
@@ -290,6 +326,9 @@ function [freq, info] = process_freq(freq, susys, info)
 	if ~isnumeric(freq)
 		error('The array of frequencies must be a numeric array.');
 	end
+	% replace zero frequency with a small positive number
+	min_freq = 1e-6;
+	freq(freq < min_freq) = min_freq;
 	if numel(freq) ~= numel(unique(freq))
 		freq = unique(freq);
 		warning('Repeated frequencies removed.');
@@ -297,12 +336,14 @@ function [freq, info] = process_freq(freq, susys, info)
 	freq = reshape(freq, [1, numel(freq)]);
 	freq = sort(freq, 'ascend');
 	% remove the frequency points where mu >= 1 from the set of frequencies
-	[~, ~, rinfo] = robstab(susys, freq);
-	freq(rinfo.Bounds(:, 1) <= 1) = [];
+	robopt = robOptions;
+	robopt.MussvOptions = 'f'; % fast upper bound
+	[~, ~, rinfo] = robstab(susys, freq, robopt);
+	freq(rinfo.Bounds(:, 2) <= 1) = [];
 	info.freq = freq;
 end
 
-function delopt = hypercube_interval_search(n_dim, obj, con, delcon, n_eval_max)
+function [delopt, objopt] = hypercube_interval_search(n_dim, obj, con, delcon, n_eval_max)
 	if nargin < 3
 		con = [];
 	end
@@ -328,13 +369,9 @@ function delopt = hypercube_interval_search(n_dim, obj, con, delcon, n_eval_max)
 			end
 		end
 		if all(isnan(objval))
-% 			error('No feasible point found.');
 			distances = diag((dels - delcon)' *(dels - delcon));
 			[~, distsortind] = sort(distances);
 			closestind = distsortind(1);
-% 			if closestind == 1
-% 				closestind = distsortind(2);
-% 			end
 			dels(:, closestind) = delcon;
 			continue;
 		else
@@ -359,6 +396,7 @@ function delopt = hypercube_interval_search(n_dim, obj, con, delcon, n_eval_max)
 		end
 	end
 	delopt = dels(:, minind);
+	objopt = objval_prev(minind);
 end
 
 function combs = allcomb(varargin)
@@ -367,4 +405,18 @@ function combs = allcomb(varargin)
 	[ndgrid_output{:}] = ndgrid(varargin{:});
 	combs = cellfun(@(m)(reshape(m, [1, numel(m)])), ndgrid_output, 'UniformOutput', false);
 	combs = cell2mat(combs);
+end
+
+function [delropt, objopt] = gradient_descent(obj, con, delrinit, objinit, n_eval_max)
+	fminopt = optimset('fmincon');
+	fminopt.Display = 'off';
+% 	fminopt.MaxFunEvals = n_eval_max;
+	fminopt.Algorithm = 'interior-point';
+% 	fminopt.Algorithm = 'sqp';
+	[delropt, objopt, exitflag] = fmincon(obj, delrinit, [], [], [], [],...
+		-ones(size(delrinit)), ones(size(delrinit)), con, fminopt);
+	if objopt > objinit || exitflag == 2
+		delropt = delrinit;
+		objopt = objinit;
+	end
 end

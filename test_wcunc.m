@@ -9,16 +9,26 @@ cd(test_dir);
 
 n_examples = size(dir('examples/'), 1) - 2;
 n_tc = 2;
-fprintf('Tests running...\n');
-fprintf('%s\n\n', repmat('.', [1, n_examples]));
 
 cnames = {'given', 'selected'};
 res = cell(n_examples, 1);
+warning('off', 'all');
+
+pool = gcp;
+spmd
+	warning('off', 'all');
+end
+
+% print progress bar
+fprintf('Tests running...\n');
+fprintf('%s\n\n', repmat('.', [1, n_examples]));
 
 % run tests
-for kk = 1 : n_examples
+parfor kk = 1 : n_examples
 	warning('off', 'all');
-	load(sprintf('./examples/example%d', kk));
+	ex_data = load(sprintf('./examples/example%d', kk));
+	usys = ex_data.usys;
+	freq = ex_data.freq;
 	for tc = 1 : n_tc
 		if tc == 1
 			input = {usys, freq};
@@ -37,25 +47,32 @@ for kk = 1 : n_examples
 			er = err.message;
 		end
 		if pass
-			obj_th = wcgainlbgrid(usys, info.freq);
-			obj_th = sum(obj_th);
-			obj = sigma(wcsys, info.freq);
-			obj = sum(obj(1, :));
-			obj = obj / obj_th;
-			er = [];			
+			obj = info.obj;
+			er = [];
+			stable = isempty(info.cfreq);
 		else
 			obj = [];
 			time = [];
+			stable = [];
 		end
-		resk.(cnames{tc}).pass = pass;
-		resk.(cnames{tc}).obj = obj;
-		resk.(cnames{tc}).time = time;
-		resk.(cnames{tc}).er = er;
+		res{kk}.(cnames{tc}).pass = pass;
+		res{kk}.(cnames{tc}).obj = obj;
+		res{kk}.(cnames{tc}).time = time;
+		res{kk}.(cnames{tc}).er = er;
+		res{kk}.(cnames{tc}).stable = stable;
 	end
-	res{kk} = resk;
 	fprintf('\b|\n');
 end
 warning on;
+
+%print final results
+n_pass = 0;
+n_all = numel(res) * n_tc;
+tcn = fieldnames(res{1});
+for kk = 1 : n_tc
+	n_pass = n_pass + sum(cellfun(@(r)(r.(tcn{kk}).pass), res));
+end
+fprintf('Tests complete. %.2f%% passed.\n', n_pass / n_all * 100);
 
 % write report into file
 file_id = fopen(report_filename, 'w');
@@ -71,8 +88,12 @@ for kk = 1 : n_examples
 		fprintf(file_id, '%s freqs.\t', tcn{tc});
 		if resktc.pass
 			fprintf(file_id, 'pass\n');
-			fprintf(file_id, '\t\ttime: %d min\n\t\tobj.: %.2f%%\n', ceil(resktc.time / 60),...
+			fprintf(file_id, '\t\ttime: %d min\n\t\tobj.: %.2f%%', ceil(resktc.time / 60),...
 				resktc.obj * 100);
+			if ~resktc.stable
+				fprintf(file_id, ' (robustly unstable)');
+			end
+			fprintf(file_id, '\n');			
 		else
 			fprintf(file_id, ['fail\t', resktc.er, '\n']);
 		end

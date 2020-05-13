@@ -122,13 +122,6 @@ function WCP = getWorstCasePerturbation(B,muB,PertData,freq)
 		for ct=1:ns
 			 if CellFlag
 					prt = nprt{ct};
-					if freq == 0 && DynamicFLag
-						prtmat = prt{1} * prt{2};
-						prtmat = real(prtmat);
-						[u, s, v] = svd(prtmat);
-						prt{1} = u(:, 1) * sqrt(s(1));
-						prt{2} = v(:, 1) * sqrt(s(1));
-					end
 			 else
 					prt = nprt(:,:,ct);
 			 end
