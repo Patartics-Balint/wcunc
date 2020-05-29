@@ -41,7 +41,7 @@ function [wcu, wcsys, info] = wcunc(usys, freq)
 % 					delropt = delrdestab;
 % 				end
 % 				objopt = obj(delropt);
-			if false %eval_progress(objub, objnom, objopt) < 0.95
+			if eval_progress(objub, objnom, objopt) < 0.95
 				[delropt, objopt] = gradient_descent(obj, con, delropt, objopt, n_eval_max);
 			end
 			info.obj = eval_progress(objub, objnom, objopt);
@@ -434,8 +434,9 @@ function [delropt, objopt] = gradient_descent(obj, con, delrinit, objinit, n_eva
 	fminopt = optimset('fmincon');
 	fminopt.Display = 'off';
 % 	fminopt.MaxFunEvals = n_eval_max;
-% 	fminopt.Algorithm = 'interior-point';
-	fminopt.Algorithm = 'active-set';
+	fminopt.Algorithm = 'interior-point';
+% 	fminopt.Algorithm = 'sqp';
+% 	fminopt.Algorithm = 'active-set';
 	[delropt, objopt, exitflag] = fmincon(obj, delrinit, [], [], [], [],...
 		-ones(size(delrinit)), ones(size(delrinit)), con, fminopt);
 	if objopt > objinit || exitflag == -2
