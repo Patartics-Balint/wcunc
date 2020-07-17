@@ -98,7 +98,7 @@
 		time: 1 min
 		obj.: 83.84%
 	selected freqs.	pass
-		time: 1 min
+		time: 2 min
 		obj.: 80.36%
 18	given freqs.	pass
 		time: 1 min
@@ -121,10 +121,10 @@
 		time: 1 min
 		obj.: 100.00%
 22	given freqs.	pass
-		time: 6 min
+		time: 7 min
 		obj.: 94.22%
 	selected freqs.	pass
-		time: 4 min
+		time: 3 min
 		obj.: 99.99%
 23	given freqs.	fail	When specifying a frequency vector W, the nominal value of USYS must be stable.
 	selected freqs.	fail	When specifying a frequency vector W, the nominal value of USYS must be stable.
@@ -204,7 +204,7 @@
 		time: 1 min
 		obj.: 0.97% (robustly unstable)
 	selected freqs.	pass
-		time: 3 min
+		time: 4 min
 		obj.: 18.04% (robustly unstable)
 37	given freqs.	pass
 		time: 1 min
