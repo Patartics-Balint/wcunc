@@ -45,7 +45,6 @@ function [F, info] = bnpinterp(varargin)
 
 	% Pick matrix and the minimisation of derivatives
 	H = zeros(numel(z));
-	rho = 0.1 * ones(size(z));
 	for ii = 1 : numel(z)
 		for jj = 1 : numel(z)
 			if ii ~= jj
@@ -54,26 +53,26 @@ function [F, info] = bnpinterp(varargin)
 			end
 		end
 	end % at this point the main diagonoal of H is zero
-	rho = sdpvar(1, numel(z), 'full');
+	rho = sdpvar(1, numel(freq), 'full');
 	rho_peak = sdpvar(1);
+	if isempty(zero_inds) % zero is not among the frequency points
+		H = H + diag([rho, rho]);
+	else
+		H = H + diag([rho(2 : end), rho]);
+	end
 	epsilon = 1e-6;
 	opt = sdpsettings('solver', 'lmilab', 'verbose', 0);
 	diagn = optimize([rho_peak >= rho,...
 		rho >= 0,...
-		epsilon <= H + diag(rho)],...
+		epsilon <= H],...
 		rho_peak + sum(rho), opt);
 	rho = value(rho);
-	H = H + diag(rho);
+	H = value(H);
 	if strfind(diagn.info, 'Infeasible')
 		error('The boundary Pick matrix could not be found.');
 	end
 	if any(eig(H) <= 0)
 		error('The boundary Pick matrix is not positive definite.');
-	end
-	if mod(numel(rho), 2) == 0 % zero is not among the frequency points
-		rho = rho(end / 2 + 1 : end);
-	else % zero is among the frequency points
-		rho = rho(ceil(end / 2) : end);
 	end
 	info.Pick = H;
 	info.derivatives = rho;

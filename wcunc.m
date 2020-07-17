@@ -33,13 +33,18 @@ function [wcu, wcsys, info] = wcunc(usys, freq)
 		else
 			[obj, con, delrdestab, objub, objnom] = pick_obj_and_con(susys, freq, cfreq,...
 				rnames, dnames);
-			progress = @(objopt)((objopt - objnom) / (objub - objnom));
 			n_eval_max = 100;
 			[delropt, objopt] = hypercube_interval_search(nr, obj, con, delrdestab, n_eval_max);
-			if progress(objopt) < 0.95
+% 				if isempty(delrdestab)
+% 					delropt = zeros(nr, 1);				
+% 				else
+% 					delropt = delrdestab;
+% 				end
+% 				objopt = obj(delropt);
+			if eval_progress(objub, objnom, objopt) < 0.95
 				[delropt, objopt] = gradient_descent(obj, con, delropt, objopt, n_eval_max);
 			end
-			info.obj = progress(objopt);
+			info.obj = eval_progress(objub, objnom, objopt);
 			for kk = 1 : numel(rnames)
 				wcu.(rnames{kk}) = delropt(kk);
 			end
@@ -120,6 +125,20 @@ function [wcu, wcsys, info] = wcunc(usys, freq)
 	info.ublk = ublk;
 	% substitute worst-case uncertainty
 	wcsys = usubs(usys, wcu);
+end
+
+function pr = eval_progress(objub, objnom, objopt)
+	num = objopt - objnom;
+	den = objub - objnom;
+	if abs(den / objub) < 1e-3 % there is no progess to be made
+		if abs(objopt) >= abs(objnom) || abs(num / objopt) < 1e-3
+			pr = 1;
+		else
+			pr = 0;
+		end
+	else
+		pr = num / den;
+	end
 end
 
 function freq = pick_freq_grid(susys, info)	
@@ -219,8 +238,12 @@ function [obj, con, delrdestab, objub, objnom] = pick_obj_and_con(susys, freq, c
 	% function
 	lb = wcgainlbgrid(susys, freq);
 	objub = -sum(lb);
-	sig = arrayfun(@(w)(norm(freqresp(susys.NominalValue, w), 2)), freq);
-	objnom = -sum(sig);
+	if isempty(cfreq)	
+		sig = arrayfun(@(w)(norm(freqresp(susys.NominalValue, w), 2)), freq);
+		objnom = -sum(sig);
+	else
+		objnom = obj(delrdestab);
+	end
 end
 
 function obj = eval_obj_mixed(susys, freq, rnames, dels)
@@ -413,9 +436,10 @@ function [delropt, objopt] = gradient_descent(obj, con, delrinit, objinit, n_eva
 % 	fminopt.MaxFunEvals = n_eval_max;
 	fminopt.Algorithm = 'interior-point';
 % 	fminopt.Algorithm = 'sqp';
+% 	fminopt.Algorithm = 'active-set';
 	[delropt, objopt, exitflag] = fmincon(obj, delrinit, [], [], [], [],...
 		-ones(size(delrinit)), ones(size(delrinit)), con, fminopt);
-	if objopt > objinit || exitflag == 2
+	if objopt > objinit || exitflag == -2
 		delropt = delrinit;
 		objopt = objinit;
 	end
