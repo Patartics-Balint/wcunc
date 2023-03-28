@@ -1,3 +1,4 @@
 # wcunc
+This is the MATLAB code of a method to calculate a worst-case uncertainty sample that maximizes the gain of an uncertain system with mixed uncertainty at multiple frequency points simultaneously. By contrast, employing the classical analysis technique, an uncertainty sample is obtained that maximizes the gain only at the single frequency where that maximum occurs. The presented approach involves a nonlinear optimization that selects the worst-case value of the uncertain parameters and the application of the boundary Nevanlinna-Pick interpolation to calculate the dynamic uncertainty sample. Such a perturbation can be used to augment Monte Carlo simulations of uncertain systems, especially if the system has multiple resonance frequencies.
 
-The code will be uploaded on the 23rd of September 2019.
+For a detailed description, see Chapter 4 of the PhD thesis in thesis_Balint_Patartics.pdf.

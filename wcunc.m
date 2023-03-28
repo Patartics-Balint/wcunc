@@ -35,12 +35,6 @@ function [wcu, wcsys, info] = wcunc(usys, freq)
 				rnames, dnames);
 			n_eval_max = 100;
 			[delropt, objopt] = hypercube_interval_search(nr, obj, con, delrdestab, n_eval_max);
-% 				if isempty(delrdestab)
-% 					delropt = zeros(nr, 1);				
-% 				else
-% 					delropt = delrdestab;
-% 				end
-% 				objopt = obj(delropt);
 			if eval_progress(objub, objnom, objopt) < 0.95
 				[delropt, objopt] = gradient_descent(obj, con, delropt, objopt, n_eval_max);
 			end
